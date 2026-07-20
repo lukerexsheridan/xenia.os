@@ -567,6 +567,11 @@ secrets rotation), the golden set grown to ≥50 with a held-out portion, the
 L2 judge (advisory, allowed to mature), sampling narrowing only as the
 harness earns it, sustained unedited-pass ≥70% x4 weeks, unit cost within
 the ratified ceiling, and the cohort to ~25.
+V1.1 (the quality phase) is governed by
+`docs/11_V1_1_PRODUCT_EVOLUTION_PLAN.md` and `docs/design/DESIGN_SYSTEM.md`
+— six phases, benchmark quality, no new capabilities. Phase 1 (design
+tokens, dark mode, UX-state primitives, motion vocabulary, full screen
+sweep) is complete; Phase 2 (per-screen experience) is next.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

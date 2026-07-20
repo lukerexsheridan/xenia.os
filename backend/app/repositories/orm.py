@@ -49,6 +49,7 @@ RING_1_TABLES = (
     "corrections",
     "outcomes",
     "dna_proposals",
+    "golden_set_entries",
 )
 
 # The shared world model: facts belong to nobody, judgments stay in Ring 1.
@@ -537,3 +538,20 @@ class DnaProposalRow(Base):
     status: Mapped[str] = mapped_column(String(15))  # proposed | endorsed | declined
     proposed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class GoldenSetEntryRow(Base):
+    """Golden-set membership (Doc 04 §6): a reference, never a copy."""
+
+    __tablename__ = "golden_set_entries"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    brief_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("research_briefs.id", ondelete="CASCADE"), unique=True
+    )
+    note: Mapped[str] = mapped_column(String(1000))
+    added_by_subject: Mapped[str] = mapped_column(String(255))
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

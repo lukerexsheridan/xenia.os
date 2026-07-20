@@ -9,10 +9,10 @@ all.
 """
 
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
@@ -32,6 +32,7 @@ from app.domain.evidence import EvidenceType, FreshnessClass
 from app.domain.research_brief import BriefSection, BriefSectionCode, completeness_problems
 from app.domain.rubric import RubricDimension, RubricScore
 from app.domain.signal import Signal
+from app.evaluation.golden import GoldenSetEntry
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.sources.http_transport import HttpxTransport
 from app.integrations.sources.politeness import PolitenessEngine
@@ -45,6 +46,7 @@ from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.business_records import SqlBusinessRecordRepo
 from app.repositories.dna import SqlDnaRepo
 from app.repositories.evidence import SqlEvidenceRepo
+from app.repositories.golden_set import SqlGoldenSetRepo
 from app.repositories.identity import SqlIdentityRepo
 from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
@@ -788,3 +790,118 @@ def assemble_queue_now(workspace_id: UUID, session: WorkspaceSessionDep) -> Asse
     return AssemblyResponse(
         week_key=result.week_key, recommended=result.recommended, excluded=result.excluded
     )
+
+
+# ── Epic 9: the Editor console's data surfaces (Doc 10, Sprint 16) ───────────
+
+
+class GradingQueueItemResponse(BaseModel):
+    brief_id: UUID
+    prospect_id: UUID
+    status: str
+    created_sections: int
+    couldnt_see: list[str]
+    l0: str | None  # from the stored derivation, when machine-composed
+    edits: int
+
+
+@router.get("/workspaces/{workspace_id}/grading-queue")
+def grading_queue(
+    workspace_id: UUID, session: WorkspaceSessionDep
+) -> list[GradingQueueItemResponse]:
+    """Everything awaiting a rubric score, oldest first (MVP samples 100%)."""
+    repo = SqlResearchBriefRepo(session, workspace_id)
+    items = []
+    for stored in repo.grading_queue():
+        derivation = stored.derivation or {}
+        items.append(
+            GradingQueueItemResponse(
+                brief_id=stored.brief.id,
+                prospect_id=stored.brief.prospect_id,
+                status=stored.status.value,
+                created_sections=len(stored.brief.sections),
+                couldnt_see=list(stored.brief.couldnt_see),
+                l0=derivation.get("l0"),
+                edits=len(repo.list_edits(stored.brief.id)),
+            )
+        )
+    return items
+
+
+class ApprovalQueueItemResponse(BaseModel):
+    brief_id: UUID
+    prospect_id: UUID
+    scored: bool
+    meets_ship_bar: bool | None
+
+
+@router.get("/workspaces/{workspace_id}/approval-queue")
+def approval_queue(
+    workspace_id: UUID, session: WorkspaceSessionDep
+) -> list[ApprovalQueueItemResponse]:
+    """The gate's inbox: every DRAFT, with its grading state alongside —
+    approval without a score is possible but visibly flagged."""
+    repo = SqlResearchBriefRepo(session, workspace_id)
+    items = []
+    for stored in repo.awaiting_approval():
+        score = repo.rubric_score_for(stored.brief.id)
+        items.append(
+            ApprovalQueueItemResponse(
+                brief_id=stored.brief.id,
+                prospect_id=stored.brief.prospect_id,
+                scored=score is not None,
+                meets_ship_bar=score.meets_ship_bar if score else None,
+            )
+        )
+    return items
+
+
+class GoldenEntryRequest(BaseModel):
+    note: str
+
+
+class GoldenEntryResponse(BaseModel):
+    brief_id: UUID
+    note: str
+    added_by: str
+
+
+@router.post("/workspaces/{workspace_id}/briefs/{brief_id}/golden", status_code=201)
+def add_golden_entry(
+    workspace_id: UUID,
+    brief_id: UUID,
+    body: GoldenEntryRequest,
+    session: WorkspaceSessionDep,
+    editor: EditorDep,
+) -> GoldenEntryResponse:
+    if SqlResearchBriefRepo(session, workspace_id).get(brief_id) is None:
+        raise NotFoundError("no research brief with this id in this workspace")
+    entry = SqlGoldenSetRepo(session, workspace_id).add(
+        GoldenSetEntry(
+            id=uuid4(),
+            workspace_id=workspace_id,
+            brief_id=brief_id,
+            note=body.note,
+            added_by_subject=editor.auth_subject,
+            added_at=datetime.now(UTC),
+        )
+    )
+    return GoldenEntryResponse(
+        brief_id=entry.brief_id, note=entry.note, added_by=entry.added_by_subject
+    )
+
+
+@router.delete("/workspaces/{workspace_id}/briefs/{brief_id}/golden", status_code=204)
+def remove_golden_entry(workspace_id: UUID, brief_id: UUID, session: WorkspaceSessionDep) -> None:
+    if not SqlGoldenSetRepo(session, workspace_id).remove(brief_id):
+        raise NotFoundError("this brief is not in the golden set")
+
+
+@router.get("/workspaces/{workspace_id}/golden-set")
+def list_golden_set(workspace_id: UUID, session: WorkspaceSessionDep) -> list[GoldenEntryResponse]:
+    return [
+        GoldenEntryResponse(
+            brief_id=entry.brief_id, note=entry.note, added_by=entry.added_by_subject
+        )
+        for entry in SqlGoldenSetRepo(session, workspace_id).list()
+    ]

@@ -113,6 +113,59 @@ class SqlResearchBriefRepo(WorkspaceScopedRepository):
         row = self._row(brief_id)
         return StoredResearchBrief(row) if row else None
 
+    def grading_queue(self) -> list[StoredResearchBrief]:
+        """Briefs awaiting the Editor (Doc 08 §6 step 5; MVP samples 100%):
+        everything without a rubric score yet, oldest first — the gate's
+        working order."""
+        scored_ids = select(RubricScoreRow.brief_id).where(
+            RubricScoreRow.workspace_id == self._workspace_id
+        )
+        rows = (
+            self._session.execute(
+                select(ResearchBriefRow)
+                .where(
+                    ResearchBriefRow.workspace_id == self._workspace_id,
+                    ResearchBriefRow.id.not_in(scored_ids),
+                )
+                .order_by(ResearchBriefRow.created_at, ResearchBriefRow.id)
+            )
+            .scalars()
+            .all()
+        )
+        return [StoredResearchBrief(row) for row in rows]
+
+    def awaiting_approval(self) -> list[StoredResearchBrief]:
+        """The approval gate's inbox: every DRAFT, oldest first."""
+        rows = (
+            self._session.execute(
+                select(ResearchBriefRow)
+                .where(
+                    ResearchBriefRow.workspace_id == self._workspace_id,
+                    ResearchBriefRow.status == BriefStatus.DRAFT.value,
+                )
+                .order_by(ResearchBriefRow.created_at, ResearchBriefRow.id)
+            )
+            .scalars()
+            .all()
+        )
+        return [StoredResearchBrief(row) for row in rows]
+
+    def deliverable_for_prospect(self, prospect_id: UUID) -> StoredResearchBrief | None:
+        """The delivery read model (Doc 10, Epic 9 exit): FINAL is baked into
+        the query and the method takes no status parameter — a delivery
+        surface structurally cannot ask for an unapproved brief."""
+        row = self._session.execute(
+            select(ResearchBriefRow)
+            .where(
+                ResearchBriefRow.workspace_id == self._workspace_id,
+                ResearchBriefRow.prospect_id == prospect_id,
+                ResearchBriefRow.status == BriefStatus.FINAL.value,
+            )
+            .order_by(ResearchBriefRow.finalised_at.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        return StoredResearchBrief(row) if row else None
+
     def update_content(self, brief: ResearchBrief) -> StoredResearchBrief:
         row = self._require_row(brief.id)
         row.sections = [_section_to_json(section) for section in brief.sections]
@@ -174,6 +227,23 @@ class SqlResearchBriefRepo(WorkspaceScopedRepository):
         existing.fit_reasoning = score.fit_reasoning
         existing.actionability = score.actionability
         self._session.flush()
+
+    def rubric_score_for(self, brief_id: UUID) -> RubricScore | None:
+        row = self._session.execute(
+            select(RubricScoreRow).where(
+                RubricScoreRow.workspace_id == self._workspace_id,
+                RubricScoreRow.brief_id == brief_id,
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            return None
+        return RubricScore(
+            accuracy=row.accuracy,
+            evidence=row.evidence,
+            insight=row.insight,
+            fit_reasoning=row.fit_reasoning,
+            actionability=row.actionability,
+        )
 
     def quality_report(self) -> dict[str, float | int]:
         """The QA-delta dial (Doc 10 Sprint 13): unedited-pass = ship-bar

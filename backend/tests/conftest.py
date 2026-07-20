@@ -36,6 +36,7 @@ TEST_EDITOR_SUBJECT = os.environ["EDITOR_AUTH_SUBJECTS"]
 RLS_PROBE_ROLE = "xenia_rls_probe"
 
 _TABLES_NEWEST_FIRST = (
+    "golden_set_entries",
     "decisions",
     "recommendations",
     "corrections",

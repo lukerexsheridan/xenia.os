@@ -14,7 +14,7 @@ from http import HTTPStatus
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app.api.internal import workbench
+from app.api.internal import console, workbench
 from app.api.internal.deps import get_editor_context
 from app.api.internal.router import router as internal_status_router
 from app.api.middleware import RequestContextMiddleware
@@ -23,6 +23,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import ErrorCode, XeniaError
 from app.core.logging import configure_logging
 from app.core.observability import init_error_reporting
+from app.domain.rules import DomainRuleViolation
 
 # The error taxonomy's HTTP face: codes are stable contract (Doc 08 SS3);
 # the frontend maps them to the Doc 06 failure voice.
@@ -47,8 +48,18 @@ def _xenia_error_handler(request: Request, exc: XeniaError) -> JSONResponse:
     )
 
 
+def _domain_rule_handler(request: Request, exc: DomainRuleViolation) -> JSONResponse:
+    """A domain law refusing a request is a validation failure, never a
+    crash: the rule's own words are the message (Doc 06's honest voice)."""
+    return JSONResponse(
+        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        content={"code": ErrorCode.VALIDATION_FAILED.value, "message": str(exc)},
+    )
+
+
 def _register_error_handlers(application: FastAPI) -> None:
     application.add_exception_handler(XeniaError, _xenia_error_handler)  # type: ignore[arg-type]
+    application.add_exception_handler(DomainRuleViolation, _domain_rule_handler)  # type: ignore[arg-type]
 
 
 def _create_internal_app(settings: Settings) -> FastAPI:
@@ -60,11 +71,17 @@ def _create_internal_app(settings: Settings) -> FastAPI:
         version="0.1.0",
         docs_url="/docs" if settings.environment != "production" else None,
         redoc_url=None,
-        dependencies=[Depends(get_editor_context)],
     )
     _register_error_handlers(internal)
-    internal.include_router(internal_status_router, tags=["status"])
-    internal.include_router(workbench.router, prefix="/workbench", tags=["workbench"])
+    editor_auth = [Depends(get_editor_context)]
+    internal.include_router(internal_status_router, tags=["status"], dependencies=editor_auth)
+    internal.include_router(
+        workbench.router, prefix="/workbench", tags=["workbench"], dependencies=editor_auth
+    )
+    # The console shell is a dataless static page; every byte of data it
+    # renders comes from the workbench routes above, Editor-authorised per
+    # request — the shell itself has nothing to protect.
+    internal.include_router(console.router, tags=["console"])
     return internal
 
 

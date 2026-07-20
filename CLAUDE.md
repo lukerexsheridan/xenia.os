@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–8 complete; Epic 9 not started.** Epic 1: the load-bearing core —
+**Epics 0–9 complete; Epic 10 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -506,8 +506,19 @@ outcomes reinforcing exactly the elements in the stored decomposition,
 Monday assembly job + 14-day outcome prompt, and migration 0006 (five Ring-1
 tables; decisions/corrections/outcomes have no UPDATE/DELETE policies at
 all — append-only by absence).
-The Editor console UI, grading queue, and golden-set management belong to
-Epic 9.
+Epic 9: the Editor console — the grading queue and quality report
+(`grading-queue`, everything unscored, MVP samples 100%), the approval gate
+(`approval-queue` + the existing finalise act; the delivery read model
+`deliverable_for_prospect` bakes FINAL into the query and takes no status
+parameter, so `/v1/prospects/{id}/brief` structurally cannot serve a draft —
+the gate-enforcement test proves it), golden-set management (`app/evaluation/
+golden.py`: only approved briefs may enter, every entry carries its
+reasoning; migration 0007), the source-health page, and the one-file
+no-framework console shell at `/internal/console` (dataless HTML; every byte
+of data comes from the Editor-authorised workbench API). DomainRuleViolation
+now maps to HTTP 422 globally.
+The customer-facing app (auth shell, queue view, brief view, interview,
+correction UX) belongs to Epic 10.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

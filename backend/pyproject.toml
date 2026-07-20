@@ -10,6 +10,10 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.14",
     "psycopg[binary]>=3.2",
+    # Epic 1: Supabase JWT verification (HS256 secret + JWKS asymmetric keys).
+    "pyjwt[crypto]>=2.10",
+    # Epic 1: outbound HTTP for the Resend adapter. Already a transitive test dep.
+    "httpx>=0.28",
 ]
 
 [dependency-groups]
@@ -46,7 +50,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["PLR2004"]  # magic values are fine in assertions
+# Magic values are fine in assertions; function-level imports are deliberate
+# in fixtures (the app imports only after the environment is prepared).
+"tests/**" = ["PLR2004", "PLC0415"]
 
 # ── mypy ─────────────────────────────────────────────────────────────────────
 
@@ -94,6 +100,8 @@ forbidden_modules = [
     "pydantic",
     "pydantic_settings",
     "openai",
+    "jwt",
+    "httpx",
 ]
 
 # api → services → (repositories | ai | integrations | evaluation) → core → domain.

@@ -68,11 +68,18 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Repository skeleton only (Epic 0 of Doc 10).** Domain, services, repositories, ai,
-evaluation, integrations packages exist with READMEs and no business logic. Do not add
-features, AI implementation, or customer-facing functionality without explicit
-instruction — the build plan sequences that work (Epics 1+) behind founder decisions
-and the research-phase gate.
+**Epic 1 (Foundations) complete; Epic 2 not started.** On top of the Epic 0 skeleton
+the load-bearing core now exists: Workspace/User with workspace-scoped repositories
+and Postgres RLS (enabled + forced on Ring-1 tables — the tenancy canary in
+`backend/tests/repositories/test_rls.py` is permanent), Supabase JWT verification
+(`/v1/me` provisions workspace + owner on first login, audited), the append-only
+audit stream, DB-backed feature flags, the Postgres job queue (`SKIP LOCKED`,
+retry/backoff, dead-letter) with worker + scheduler and a daily heartbeat email
+(Resend), and the idempotent queued Stripe webhook receiver. The domain rules
+ontology (DNA, delegation, confidence…) is Epic 2. Do not add features, AI
+implementation, or customer-facing functionality without explicit instruction —
+the build plan sequences that work behind founder decisions and the
+research-phase gate.
 
 ## Conventions worth knowing
 

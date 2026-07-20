@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     sentry_dsn: str = ""
 
+    # Outbound email (Resend adapter). The heartbeat job emails the founder
+    # daily (Doc 10, Sprint 3); an empty recipient skips the send with a log.
+    email_from: str = "Xenia <onboarding@resend.dev>"
+    heartbeat_email_to: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

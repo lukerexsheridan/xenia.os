@@ -12,6 +12,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.repositories import orm  # noqa: F401  — populates Base.metadata for autogenerate
 from app.repositories.base import Base
 
 config = context.config

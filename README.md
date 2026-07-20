@@ -8,9 +8,12 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **repository skeleton (Epic 0)**. No business features, no AI
-> implementation, no customer-facing functionality — by design, per the
-> [V1 Build Plan](docs/10_V1_BUILD_PLAN.md).
+> Current state: **Epic 1 (Foundations) complete**. Authenticated multi-tenant core
+> (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
+> append-only audit stream, DB-backed feature flags, Postgres job queue with worker,
+> scheduler, retry/dead-letter, daily heartbeat email, and the idempotent Stripe
+> webhook receiver. No AI implementation, no customer-facing features — by design,
+> per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 2 (the domain rules) is next.
 
 ## Stack
 

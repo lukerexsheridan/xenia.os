@@ -12,12 +12,16 @@ What was deferred, why, the consequence of leaving it, and the trigger for repay
 
 ---
 
-## 2026-07-19 — Supabase JWT verification is a stub
-`app/integrations/supabase_auth` defines the verifier interface but raises
-`NotImplementedError`. Deliberate: the skeleton ships no auth-protected endpoints.
-Repay in Epic 1 (Sprint 2, tenancy) — the first authenticated route may not merge
-without it.
+## 2026-07-20 — Sentry wiring not yet installed
+ADR-005 accepts Sentry "from first deploy"; the SDK is not yet a dependency and
+`SENTRY_DSN` is read but unused. Taken (retroactively logged — it was Epic 0's
+unlogged deferral): the skeleton and Epic 1 have no customer traffic, and structured
+logs cover local/CI. Consequence: unhandled production exceptions rely on Railway
+logs until wired. Repay: before the first staging deploy that serves anyone but the
+founder, and no later than Epic 3 (the workbench, the first real users).
 
-## 2026-07-19 — Worker is a heartbeat loop, not a queue consumer
-`app/workers/main.py` idles with a heartbeat log. The jobs table +
-`FOR UPDATE SKIP LOCKED` consumer (Doc 08 §7) arrives in Epic 1/Sprint 3.
+<!-- Repaid 2026-07-20: "Supabase JWT verification is a stub" (2026-07-19) — real
+     verifier (JWKS + HS256) shipped in Epic 1 with the authenticated /v1/me route.
+     Repaid 2026-07-20: "Worker is a heartbeat loop, not a queue consumer"
+     (2026-07-19) — jobs table, SKIP LOCKED consumer, scheduler, retry/backoff and
+     dead-lettering shipped in Epic 1. -->

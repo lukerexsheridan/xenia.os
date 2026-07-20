@@ -6,7 +6,9 @@ import-linter). It is where the constitutional documents literally become
 code: delegation checks, disqualifier enforcement, DNA evolution laws,
 confidence-band assignment, ring-boundary predicates.
 
-The ontology arrives in Epic 2 (Doc 10, Sprint 4): Workspace, User,
+Epic 1 landed the tenancy core: Workspace, User (with WorkspaceRole), the
+AuditEntry stream, and the repository protocols they need (IdentityRepo,
+AuditEntryRepo). The rules ontology arrives in Epic 2 (Doc 10, Sprint 4):
 IdealClientDna, Prospect, BusinessRecord, Evidence, ResearchBrief,
 Recommendation, Decision, Correction, Draft, Outcome, Memory,
 DelegationGrant, SuppressionEntry — named verbatim, never renamed without a

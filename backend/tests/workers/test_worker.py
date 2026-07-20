@@ -78,13 +78,15 @@ def test_failed_handler_writes_roll_back(db: Engine) -> None:
 
 
 def test_daily_schedule_enqueues_exactly_once_per_day(db: Engine) -> None:
+    from app.workers.schedules import SCHEDULES
+
     after_due = datetime.combine(datetime.now(UTC).date(), time(23, 59), tzinfo=UTC)
     with Session(db) as session:
         enqueue_due_schedules(session, now=after_due)
         enqueue_due_schedules(session, now=after_due)
         session.commit()
         counts = JobQueue(session).counts_by_status()
-    assert counts == {"pending": 1}
+    assert counts == {"pending": len(SCHEDULES)}
 
 
 def test_schedule_not_due_enqueues_nothing(db: Engine) -> None:

@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–4 complete; Epic 5 not started.** Epic 1: the load-bearing core —
+**Epics 0–5 complete; Epic 6 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -464,8 +464,16 @@ library, websites, hiring) as fixture-tested adapters over the politeness engine
 the canonical content model with near-dup collapse, entity binding v1 (strong keys
 bind, everything else queues for the Editor — ADR-008), the human floor queue,
 source-health telemetry, and `AcquireFootprint` wiring it all behind
-`/internal/workbench/business-records/{id}/acquire`. Extraction, signals, and the
-L0 battery belong to Epics 5–7.
+`/internal/workbench/business-records/{id}/acquire`. Epic 5: the evidence & knowledge layer —
+deterministic extractors (Filing/AdRecord/Posting → Evidence, zero tokens), the
+first AI pipeline (`app/ai`: schema-constrained page extraction, span-grounding
+kills ungrounded claims, usage metered to the ai_call_records ledger),
+content-derived Evidence IDs (ADR-009: extraction idempotent, receipt tables
+replayable), the graph as columns (corroborates/conflicts/supersedes;
+same-domain repetition never corroborates), and the four signal families as
+rules with derivations stored and deterministic freshness decay (the daily
+signal_decay_sweep job re-derives — stale signals demote toward unknown).
+Orchestration and the L0 battery belong to Epics 6–7.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

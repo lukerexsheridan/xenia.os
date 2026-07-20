@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     companies_house_api_key: str = ""
     ad_library_access_token: str = ""
 
+    # The V1 provider model behind app/ai (AP6). [calibrates] per pipeline.
+    openai_model: str = "gpt-5"
+
 
 @lru_cache
 def get_settings() -> Settings:

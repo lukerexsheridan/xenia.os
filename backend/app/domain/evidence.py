@@ -22,7 +22,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from uuid import UUID
+from urllib.parse import urlsplit
+from uuid import UUID, uuid5
 
 from app.domain.rules import DomainRuleViolation
 
@@ -59,6 +60,9 @@ class Evidence:
     observed_at: datetime
     extraction_confidence: float
     freshness_class: FreshnessClass
+    # The claim-type key relations group on (Doc 09 §6); "general" for manual
+    # workbench capture, assigned by extractors in the pipeline.
+    claim_slot: str = "general"
 
     def __post_init__(self) -> None:
         if self.evidence_type is EvidenceType.CUSTOMER_ATTESTED:
@@ -108,3 +112,75 @@ def build_receipt_table(evidence: Iterable[Evidence]) -> tuple[ReceiptRow, ...]:
         )
         for index, item in enumerate(ordered)
     )
+
+
+# ── Evidence identity and the graph relations (Epic 5; Doc 09 §6) ────────────
+
+EVIDENCE_NAMESPACE = UUID("6e1a3a70-9c1e-5df0-8f2a-000000000e5d")
+
+
+def derive_evidence_id(
+    *,
+    business_record_id: UUID,
+    evidence_type: EvidenceType,
+    claim_slot: str,
+    claim: str,
+    snapshot_id: UUID,
+) -> UUID:
+    """Stable, content-derived (ADR-009): the same observation re-extracted
+    yields the same ID — extraction is idempotent, citations replayable."""
+    normalised = " ".join(claim.split()).lower()
+    material = "|".join(
+        [str(business_record_id), evidence_type.value, claim_slot, normalised, str(snapshot_id)]
+    )
+    return uuid5(EVIDENCE_NAMESPACE, material)
+
+
+@dataclass(frozen=True)
+class EvidenceRelations:
+    """Corroborates / conflicts / supersedes as data, not a graph database
+    (Doc 09 §13): three columns, computed deterministically."""
+
+    corroborates_id: UUID | None = None
+    conflicts_id: UUID | None = None
+    supersedes_id: UUID | None = None
+
+
+def _normalised(claim: str) -> str:
+    return " ".join(claim.split()).lower()
+
+
+def _source_domain(url: str) -> str:
+    return urlsplit(url).netloc.lower()
+
+
+def relate(new: Evidence, existing: Iterable[Evidence]) -> EvidenceRelations:
+    """The graph rules (Doc 05 §3, Doc 09 §6), applied within one business's
+    claim-slot, newest existing observation first:
+
+    - the same claim from the same source, re-observed → supersedes;
+    - the same claim from an *independent* source (different domain) →
+      corroborates — syndication-collapsed sightings never corroborate,
+      and same-domain repetition is one source wearing two hats;
+    - a different claim in the same slot → conflicts, reported not resolved.
+    """
+    pool = sorted(
+        (
+            item
+            for item in existing
+            if item.business_record_id == new.business_record_id
+            and item.claim_slot == new.claim_slot
+            and item.id != new.id
+        ),
+        key=lambda item: (item.observed_at, str(item.id)),
+        reverse=True,
+    )
+    new_claim = _normalised(new.claim)
+    for prior in pool:
+        if _normalised(prior.claim) == new_claim:
+            if _source_domain(prior.source_url) == _source_domain(new.source_url):
+                return EvidenceRelations(supersedes_id=prior.id)
+            return EvidenceRelations(corroborates_id=prior.id)
+    if pool:
+        return EvidenceRelations(conflicts_id=pool[0].id)
+    return EvidenceRelations()

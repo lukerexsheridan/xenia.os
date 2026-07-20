@@ -18,16 +18,19 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.ai.pipelines.extract_page_evidence import ExtractPageEvidence
+from app.ai.providers.openai_responses import OpenAIResponsesProvider
 from app.api.deps import get_db_session
 from app.api.internal.deps import EditorContext, get_editor_context, get_workspace_session
 from app.core.config import get_settings
 from app.core.errors import NotFoundError
 from app.core.logging import current_request_id
-from app.domain.confidence import ConfidenceBand
+from app.domain.confidence import ConfidenceBand, band_for
 from app.domain.dna import DecayClass, DnaCategory, ElementOrigin
 from app.domain.evidence import EvidenceType, FreshnessClass
 from app.domain.research_brief import BriefSection, BriefSectionCode, completeness_problems
 from app.domain.rubric import RubricDimension
+from app.domain.signal import Signal
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.sources.http_transport import HttpxTransport
 from app.integrations.sources.politeness import PolitenessEngine
@@ -42,6 +45,7 @@ from app.repositories.business_records import SqlBusinessRecordRepo
 from app.repositories.dna import SqlDnaRepo
 from app.repositories.evidence import SqlEvidenceRepo
 from app.repositories.identity import SqlIdentityRepo
+from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo, StoredResearchBrief
 from app.repositories.snapshots import SqlSourceSnapshotRepo
@@ -55,7 +59,9 @@ from app.services.capture_evidence import CaptureEvidence
 from app.services.capture_snapshot import CaptureSnapshot
 from app.services.create_dna import CreateDna, DnaElementInput
 from app.services.create_prospect import CreateProspect
+from app.services.derive_signals import DeriveSignals
 from app.services.documents import RenderBriefPdf, RenderDnaDocument
+from app.services.extract_evidence import ExtractEvidence
 from app.services.resolve_binding_review import ResolveBindingReview
 from app.services.resolve_entity import ResolveEntity
 
@@ -527,3 +533,83 @@ def resolve_binding_review(
 def source_health(session: SessionDep) -> dict[str, dict[str, int]]:
     """Per-family fetch/parse outcome counts (Doc 09 §10's Steward view)."""
     return SqlSourceHealthRepo(session).counts()
+
+
+# ── Epic 5: extraction and signals ───────────────────────────────────────────
+
+
+def get_extract_evidence(session: SessionDep) -> ExtractEvidence:
+    settings = get_settings()
+    pipeline = None
+    if settings.openai_api_key:
+        pipeline = ExtractPageEvidence(
+            OpenAIResponsesProvider(api_key=settings.openai_api_key, model=settings.openai_model)
+        )
+    return ExtractEvidence(
+        SqlKnowledgeRepo(session),
+        SqlEvidenceRepo(session),
+        SqlBusinessRecordRepo(session),
+        SqlSourceHealthRepo(session),
+        pipeline,
+    )
+
+
+class ExtractionResponse(BaseModel):
+    business_record_id: UUID
+    stored: int
+    already_known: int
+    dropped: int
+    couldnt_see: list[str]
+
+
+@router.post("/business-records/{business_record_id}/extract")
+def extract_evidence(
+    business_record_id: UUID,
+    extract: Annotated[ExtractEvidence, Depends(get_extract_evidence)],
+) -> ExtractionResponse:
+    report = extract.execute(business_record_id)
+    return ExtractionResponse(
+        business_record_id=report.business_record_id,
+        stored=report.stored,
+        already_known=report.already_known,
+        dropped=report.dropped,
+        couldnt_see=report.couldnt_see,
+    )
+
+
+class SignalResponse(BaseModel):
+    family: str
+    name: str
+    confidence: float
+    confidence_band: ConfidenceBand
+    supporting_evidence_count: int
+    newest_observation_at: datetime
+    rule_version: str
+
+
+@router.post("/business-records/{business_record_id}/signals")
+def derive_signals(business_record_id: UUID, session: SessionDep) -> list[SignalResponse]:
+    signals = DeriveSignals(SqlEvidenceRepo(session), SqlKnowledgeRepo(session)).execute(
+        business_record_id
+    )
+    return [_signal_response(signal) for signal in signals]
+
+
+@router.get("/business-records/{business_record_id}/signals")
+def list_signals(business_record_id: UUID, session: SessionDep) -> list[SignalResponse]:
+    return [
+        _signal_response(signal)
+        for signal in SqlKnowledgeRepo(session).signals_for_business(business_record_id)
+    ]
+
+
+def _signal_response(signal: Signal) -> SignalResponse:
+    return SignalResponse(
+        family=signal.family.value,
+        name=signal.name,
+        confidence=signal.confidence,
+        confidence_band=band_for(signal.confidence),
+        supporting_evidence_count=len(signal.supporting_evidence_ids),
+        newest_observation_at=signal.newest_observation_at,
+        rule_version=signal.rule_version,
+    )

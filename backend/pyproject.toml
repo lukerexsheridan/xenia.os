@@ -22,6 +22,8 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.66.0",
     # Epic 4: deterministic readability cleaning for the website adapter.
     "beautifulsoup4>=4.15.0",
+    # Epic 5: the V1 AI provider behind app/ai (AP6; Doc 08 §2).
+    "openai>=2.46.0",
 ]
 
 [dependency-groups]

@@ -10,7 +10,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.domain.evidence import Evidence, EvidenceType, FreshnessClass
+from app.domain.evidence import Evidence, EvidenceRelations, EvidenceType, FreshnessClass
 from app.repositories.orm import EvidenceRow
 
 
@@ -25,6 +25,7 @@ def _to_domain(row: EvidenceRow) -> Evidence:
         observed_at=row.observed_at,
         extraction_confidence=row.extraction_confidence,
         freshness_class=FreshnessClass(row.freshness_class),
+        claim_slot=row.claim_slot,
     )
 
 
@@ -32,7 +33,7 @@ class SqlEvidenceRepo:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def add(self, evidence: Evidence) -> Evidence:
+    def add(self, evidence: Evidence, relations: EvidenceRelations | None = None) -> Evidence:
         row = EvidenceRow(
             id=evidence.id,
             business_record_id=evidence.business_record_id,
@@ -43,10 +44,22 @@ class SqlEvidenceRepo:
             observed_at=evidence.observed_at,
             extraction_confidence=evidence.extraction_confidence,
             freshness_class=evidence.freshness_class.value,
+            claim_slot=evidence.claim_slot,
+            corroborates_id=relations.corroborates_id if relations else None,
+            conflicts_id=relations.conflicts_id if relations else None,
+            supersedes_id=relations.supersedes_id if relations else None,
         )
         self._session.add(row)
         self._session.flush()
         return _to_domain(row)
+
+    def add_if_new(self, evidence: Evidence, relations: EvidenceRelations | None = None) -> bool:
+        """Idempotent insert keyed on the content-derived ID (ADR-009):
+        re-extraction is harmless by construction. True when inserted."""
+        if self._session.get(EvidenceRow, evidence.id) is not None:
+            return False
+        self.add(evidence, relations)
+        return True
 
     def get(self, evidence_id: UUID) -> Evidence | None:
         row = self._session.get(EvidenceRow, evidence_id)

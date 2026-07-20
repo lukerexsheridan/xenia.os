@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.repositories.jobs import JobQueue
 
 HEARTBEAT_JOB_TYPE = "send_heartbeat_email"
+SIGNAL_DECAY_SWEEP_JOB_TYPE = "signal_decay_sweep"
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,8 @@ class DailySchedule:
 SCHEDULES: tuple[DailySchedule, ...] = (
     # The daily heartbeat email to the founder (Doc 10, Sprint 3).
     DailySchedule(job_type=HEARTBEAT_JOB_TYPE, at_utc=time(6, 0)),
+    # The freshness economy's clock (Doc 09 §7): stale signals demote daily.
+    DailySchedule(job_type=SIGNAL_DECAY_SWEEP_JOB_TYPE, at_utc=time(5, 0)),
 )
 
 

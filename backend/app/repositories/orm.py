@@ -56,6 +56,8 @@ RING_2_TABLES = (
     "canonical_content",
     "entity_binding_reviews",
     "source_health_events",
+    "signals",
+    "ai_call_records",
 )
 
 
@@ -182,7 +184,56 @@ class EvidenceRow(Base):
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     extraction_confidence: Mapped[float] = mapped_column(Float)
     freshness_class: Mapped[str] = mapped_column(String(20))
+    # Epic 5: the claim-type key relations group on, and the graph as columns
+    # (Doc 09 §6/§13 — three columns, two queries, no graph database).
+    claim_slot: Mapped[str] = mapped_column(String(100), server_default="general")
+    corroborates_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("evidence.id", ondelete="SET NULL")
+    )
+    conflicts_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("evidence.id", ondelete="SET NULL")
+    )
+    supersedes_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("evidence.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SignalRow(Base):
+    """Knowledge from evidence (Doc 09 §7): Ring 2, derivations stored."""
+
+    __tablename__ = "signals"
+    __table_args__ = (
+        UniqueConstraint("business_record_id", "name", name="uq_signals_business_record_id_name"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    business_record_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("business_records.id", ondelete="CASCADE"), index=True
+    )
+    family: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(60))
+    confidence: Mapped[float] = mapped_column(Float)
+    supporting_evidence_ids: Mapped[list[str]] = mapped_column(JSONB)
+    newest_observation_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    rule_version: Mapped[str] = mapped_column(String(30))
+    derived_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class AiCallRecordRow(Base):
+    """The unit-cost ledger's raw material (Doc 08 §6): every model call."""
+
+    __tablename__ = "ai_call_records"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    pipeline: Mapped[str] = mapped_column(String(60))
+    prompt_version: Mapped[str] = mapped_column(String(60))
+    model: Mapped[str] = mapped_column(String(60))
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    output_tokens: Mapped[int] = mapped_column(Integer)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 # ── Ring 1: the workbench's customer-side records (Epic 3) ───────────────────

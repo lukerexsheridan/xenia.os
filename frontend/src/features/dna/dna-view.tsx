@@ -9,6 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { TextSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 
 const CATEGORY_TITLES: Record<string, string> = {
@@ -43,10 +44,15 @@ export function DnaView() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["dna"] }),
   });
 
-  if (dna.isPending) return <p className="text-sm text-stone-500">Opening your DNA…</p>;
+  if (dna.isPending)
+    return (
+      <div className="max-w-prose">
+        <TextSkeleton lines={6} />
+      </div>
+    );
   if (dna.isError)
     return (
-      <p className="max-w-prose text-sm text-stone-600">
+      <p className="text-ink-muted max-w-prose text-sm leading-relaxed">
         No DNA yet — the interview founds it. Head to the interview when you have ten minutes.
       </p>
     );
@@ -61,20 +67,20 @@ export function DnaView() {
     .filter((group) => group.elements.length > 0);
 
   return (
-    <div className="max-w-prose">
+    <div className="animate-settle-in max-w-prose">
       <header className="flex items-baseline justify-between">
-        <h2 className="font-serif text-xl">Your ideal-client DNA</h2>
-        <span className="text-xs text-stone-500">version {data.version}</span>
+        <h2 className="text-ink font-serif text-xl">Your ideal-client DNA</h2>
+        <span className="text-ink-faint text-xs">version {data.version}</span>
       </header>
       {!data.endorsed && (
-        <div className="mt-3 rounded border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm text-stone-800">
+        <div className="rounded-card border-hairline bg-possible-surface mt-3 border p-4">
+          <p className="text-ink text-sm leading-relaxed">
             This is my model of who you sell to, in your words. Read it; when it&apos;s right,
             endorse it and it becomes our shared agreement.
           </p>
           <button
             data-testid="endorse"
-            className="mt-2 rounded bg-stone-900 px-3 py-1 text-sm text-white"
+            className="transition-settle rounded-control bg-accent text-accent-ink mt-2.5 px-3 py-1.5 text-sm font-medium hover:opacity-90"
             onClick={() => endorse.mutate()}
           >
             Endorse this DNA
@@ -82,30 +88,30 @@ export function DnaView() {
         </div>
       )}
       {data.endorsed && (
-        <p data-testid="endorsed" className="mt-2 text-sm text-emerald-800">
+        <p data-testid="endorsed" className="text-confident-ink mt-2 text-sm">
           Endorsed — our shared agreement. Corrections keep it honest.
         </p>
       )}
       {effect && (
-        <p data-testid="named-effect" className="mt-3 rounded bg-stone-100 p-2 text-sm">
-          {effect}
-        </p>
+        <div data-testid="named-effect" className="animate-settle-in mt-3">
+          <ErrorNoticeLike>{effect}</ErrorNoticeLike>
+        </div>
       )}
       {grouped.map((group) => (
         <section key={group.title} className="mt-6">
-          <h3 className="text-sm font-medium tracking-wide text-stone-700 uppercase">
+          <h3 className="text-ink-muted text-xs font-medium tracking-wide uppercase">
             {group.title}
           </h3>
           <ul className="mt-2 space-y-2">
             {group.elements.map((element) => (
               <li
                 key={element.element_id}
-                className="flex items-start justify-between gap-3 text-[15px] text-stone-800"
+                className="text-ink flex items-start justify-between gap-3 font-serif text-[1.0625rem] leading-[1.65]"
               >
                 <span>{element.statement}</span>
                 <button
                   data-testid={`withdraw-${element.element_id}`}
-                  className="shrink-0 text-xs text-stone-400 hover:text-red-800"
+                  className="transition-settle text-ink-faint hover:text-danger-ink shrink-0 pt-1 text-xs"
                   title="Wrong — remove this"
                   aria-label={`wrong — remove: ${element.statement}`}
                   onClick={() => withdraw.mutate(element.element_id)}
@@ -118,21 +124,24 @@ export function DnaView() {
         </section>
       ))}
       {open.length > 0 && (
-        <section data-testid="proposals" className="mt-8 border-t border-stone-200 pt-4">
-          <h3 className="text-sm font-medium text-stone-700">Awaiting your signature</h3>
+        <section data-testid="proposals" className="border-hairline mt-8 border-t pt-4">
+          <h3 className="text-ink text-sm font-medium">Awaiting your signature</h3>
           {open.map((proposal) => (
-            <div key={proposal.proposal_id} className="mt-2 rounded border border-stone-200 p-3">
-              <p className="text-sm text-stone-800">{proposal.statement}</p>
-              <p className="mt-1 text-xs text-stone-500">{proposal.rationale}</p>
-              <div className="mt-2 flex gap-2">
+            <div
+              key={proposal.proposal_id}
+              className="rounded-card border-hairline bg-surface shadow-card mt-2 border p-4"
+            >
+              <p className="text-ink font-serif text-[1.0625rem]">{proposal.statement}</p>
+              <p className="text-ink-muted mt-1 text-xs leading-relaxed">{proposal.rationale}</p>
+              <div className="mt-2.5 flex gap-2">
                 <button
-                  className="rounded bg-stone-900 px-3 py-1 text-xs text-white"
+                  className="transition-settle rounded-control bg-accent text-accent-ink px-3 py-1 text-xs font-medium hover:opacity-90"
                   onClick={() => decideProposal.mutate({ id: proposal.proposal_id, approve: true })}
                 >
                   Endorse
                 </button>
                 <button
-                  className="rounded border border-stone-300 px-3 py-1 text-xs"
+                  className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1 text-xs"
                   onClick={() =>
                     decideProposal.mutate({ id: proposal.proposal_id, approve: false })
                   }
@@ -144,9 +153,9 @@ export function DnaView() {
           ))}
         </section>
       )}
-      <section className="mt-8 border-t border-stone-200 pt-4">
-        <h3 className="text-sm font-medium text-stone-700">Every change, explained</h3>
-        <ul className="mt-2 space-y-1 text-xs text-stone-500">
+      <section className="border-hairline mt-8 border-t pt-4">
+        <h3 className="text-ink text-sm font-medium">Every change, explained</h3>
+        <ul className="text-ink-faint mt-2 space-y-1 text-xs leading-relaxed">
           {data.changelog
             .slice(-10)
             .reverse()
@@ -162,12 +171,21 @@ export function DnaView() {
       <p className="mt-6">
         <button
           data-testid="export-dna-pdf"
-          className="text-sm text-sky-800 underline"
+          className="text-accent text-sm underline underline-offset-2"
           onClick={() => void api.downloadDnaPdf()}
         >
           Export the DNA document (PDF)
         </button>
       </p>
     </div>
+  );
+}
+
+/** The named effect: an acknowledgment card, not an alarm. */
+function ErrorNoticeLike({ children }: { children: string }) {
+  return (
+    <p className="rounded-card border-hairline bg-surface text-ink shadow-card border p-3 text-sm font-medium">
+      {children}
+    </p>
   );
 }

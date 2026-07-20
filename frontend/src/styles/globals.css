@@ -1,23 +1,167 @@
 @import "tailwindcss";
 
 /*
- * Visual philosophy (Doc 06 §8): hierarchy through typography, not chrome;
- * one accent; semantic colour only. The four confidence words are design
- * tokens, not ad-hoc styling (Doc 08 §4) — colour never carries meaning
- * alone (the word is always present; colour underlines it).
+ * The Xenia Design System, as law (docs/design/DESIGN_SYSTEM.md; Doc 06 §8):
+ * ink, paper, one accent; semantic colour only; hierarchy through
+ * typography, not chrome; motion explains, never performs. Feature
+ * components use these tokens — raw palette utilities are a review failure.
+ *
+ * Both themes are first-class. Dark follows the OS (no toggle at V1.1);
+ * warm brown-blacks, never blue-blacks — midnight reading is the design case.
  */
-@theme {
-  --color-background: oklch(0.985 0.002 90);
-  --color-foreground: oklch(0.23 0.01 260);
-  --color-muted: oklch(0.94 0.004 90);
-  --color-muted-foreground: oklch(0.5 0.01 260);
-  --color-accent: oklch(0.45 0.1 265);
-  --color-accent-foreground: oklch(0.985 0.002 90);
-  --color-border: oklch(0.9 0.005 90);
 
-  /* Confidence vocabulary tokens (Doc 06 §5): confident / likely / possible / uncertain */
-  --color-confidence-confident: oklch(0.5 0.11 155);
-  --color-confidence-likely: oklch(0.55 0.09 210);
-  --color-confidence-possible: oklch(0.6 0.09 75);
-  --color-confidence-uncertain: oklch(0.55 0.02 260);
+:root {
+  --paper: #faf9f7;
+  --surface: #ffffff;
+  --surface-translucent: rgb(255 255 255 / 0.82);
+  --ink: #211e1a;
+  --ink-muted: #6d675e;
+  --ink-faint: #98918a;
+  --hairline: #e6e2db;
+  --accent: #3a5bc7;
+  --accent-ink: #ffffff;
+
+  --confident-surface: #e7f2ec;
+  --confident-ink: #1d5c3f;
+  --likely-surface: #e8f0f7;
+  --likely-ink: #1e4e79;
+  --possible-surface: #f7efe0;
+  --possible-ink: #755619;
+  --uncertain-surface: #efedea;
+  --uncertain-ink: #5f594f;
+  --danger-surface: #f8ecea;
+  --danger-ink: #8c2f24;
+
+  --shadow-card: 0 1px 2px rgb(33 30 26 / 0.05), 0 1px 1px rgb(33 30 26 / 0.03);
+  --shadow-raised: 0 8px 30px rgb(33 30 26 / 0.12);
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-settle: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #141312;
+    --surface: #1c1a18;
+    --surface-translucent: rgb(28 26 24 / 0.82);
+    --ink: #e9e6e0;
+    --ink-muted: #9d968b;
+    --ink-faint: #6d675f;
+    --hairline: #2e2b27;
+    --accent: #93aaf5;
+    --accent-ink: #10131f;
+
+    --confident-surface: #16241d;
+    --confident-ink: #84c7a3;
+    --likely-surface: #16202a;
+    --likely-ink: #8cb8dd;
+    --possible-surface: #262015;
+    --possible-ink: #d3b578;
+    --uncertain-surface: #232120;
+    --uncertain-ink: #a29a8f;
+    --danger-surface: #271a18;
+    --danger-ink: #e09287;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-raised: 0 8px 30px rgb(0 0 0 / 0.5);
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-confident-surface: var(--confident-surface);
+  --color-confident-ink: var(--confident-ink);
+  --color-likely-surface: var(--likely-surface);
+  --color-likely-ink: var(--likely-ink);
+  --color-possible-surface: var(--possible-surface);
+  --color-possible-ink: var(--possible-ink);
+  --color-uncertain-surface: var(--uncertain-surface);
+  --color-uncertain-ink: var(--uncertain-ink);
+  --color-danger-surface: var(--danger-surface);
+  --color-danger-ink: var(--danger-ink);
+
+  --radius-control: 6px;
+  --radius-card: 10px;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+}
+
+/* Typography: the reading face is a serif document; the interface is quiet. */
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
+/* Focus is visible, always: 2px accent ring, offset, never removed. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Motion vocabulary. Settle in, exit out; nothing performs. */
+.transition-settle {
+  transition-duration: var(--duration-base);
+  transition-timing-function: var(--ease-settle);
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-settle-in {
+  animation: settle-in var(--duration-base) var(--ease-settle) both;
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-skeleton {
+  animation: skeleton-breathe 1.6s var(--ease-settle) infinite;
+}
+
+/* The reduced-motion law: one rule, global, non-negotiable. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

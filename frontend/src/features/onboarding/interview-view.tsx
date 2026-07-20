@@ -8,6 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { ErrorNotice } from "@/components/ui/error-notice";
+import { TextSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 
 export function InterviewView() {
@@ -31,13 +33,18 @@ export function InterviewView() {
     onError: (mutationError) => setError(mutationError.message),
   });
 
-  if (interview.isPending) return <p className="text-sm text-stone-500">One moment…</p>;
-  if (interview.isError) return <p className="text-sm text-red-800">{interview.error.message}</p>;
+  if (interview.isPending)
+    return (
+      <div className="max-w-prose">
+        <TextSkeleton lines={2} />
+      </div>
+    );
+  if (interview.isError) return <ErrorNotice message={interview.error.message} />;
 
   const state = interview.data;
   if (state.completed) {
     return (
-      <p className="max-w-prose text-sm text-stone-700">
+      <p className="text-ink-muted max-w-prose text-sm leading-relaxed">
         The interview is done and your DNA is founded — read it on the DNA page and endorse it when
         it&apos;s right.
       </p>
@@ -45,16 +52,19 @@ export function InterviewView() {
   }
 
   return (
-    <div className="max-w-prose">
-      <p className="text-xs text-stone-500">
+    <div className="animate-settle-in max-w-prose">
+      <p className="text-ink-faint text-xs">
         Question {state.answered + 1} of {state.total} — stop any time, nothing is lost.
       </p>
-      <p data-testid="interview-prompt" className="mt-3 font-serif text-lg text-stone-900">
+      <p
+        data-testid="interview-prompt"
+        className="text-ink mt-3 font-serif text-lg leading-relaxed"
+      >
         {state.prompt}
       </p>
       <textarea
         data-testid="interview-answer"
-        className="mt-4 w-full rounded border border-stone-300 p-3 text-[15px]"
+        className="rounded-card border-hairline bg-surface text-ink mt-4 w-full border p-3 font-serif text-[1.0625rem] leading-[1.65]"
         rows={state.one_per_line ? 5 : 3}
         placeholder={state.one_per_line ? "One per line" : "In your own words"}
         value={text}
@@ -62,14 +72,14 @@ export function InterviewView() {
       />
       <button
         data-testid="interview-send"
-        className="mt-2 rounded bg-stone-900 px-4 py-2 text-sm text-white"
+        className="transition-settle rounded-control bg-accent text-accent-ink mt-2 px-4 py-2 text-sm font-medium hover:opacity-90"
         onClick={() =>
           state.question_key && answer.mutate({ key: state.question_key, value: text })
         }
       >
         That&apos;s my answer
       </button>
-      {error && <p className="mt-2 text-sm text-red-800">{error}</p>}
+      {error && <p className="animate-settle-in text-danger-ink mt-2 text-sm">{error}</p>}
     </div>
   );
 }

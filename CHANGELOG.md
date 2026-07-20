@@ -2,6 +2,19 @@
 
 Format: keep-a-changelog-ish; one entry per released state, newest first.
 
+## V1.1 Phase 1 — the design system as code — 2026-07-20
+
+Governed by docs/11_V1_1_PRODUCT_EVOLUTION_PLAN.md (six quality phases, no
+new capabilities). This phase: the Doc 06 §8 visual philosophy made
+executable — ink/paper/one-accent tokens with first-class automatic dark
+mode (warm blacks, AA in both themes), the serif reading face for briefs,
+DNA statements and Xenia's voice, a fixed motion vocabulary
+(120/200/320ms, settle curves, one global reduced-motion law), visible
+focus everywhere, two shadows, tokenised confidence colours, and the
+UX-state primitives (shape-true skeletons — no spinners anywhere — designed
+empty states, plain-voice error alerts) swept across every screen. Zero raw
+palette utilities remain in feature components; loop-walk E2E green.
+
 ## Hardening pass — 2026-07-20 (post-review)
 
 An independent release review of the completed V1 build produced findings;

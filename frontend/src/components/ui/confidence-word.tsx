@@ -1,15 +1,14 @@
 /**
- * The four-word confidence vocabulary as design tokens (Doc 06 §5).
- *
- * The word arrives from the API (AP5) — this component only styles it.
- * Semantic colour tokens, never ad-hoc styling; no percentages, ever.
+ * The four-word confidence vocabulary as design tokens (Doc 06 §5;
+ * Design System §1). The word arrives from the API (AP5) — this component
+ * only styles it. Colour underlines meaning; the word carries it.
  */
 
 const TOKENS: Record<string, string> = {
-  confident: "text-emerald-800 bg-emerald-50 border-emerald-200",
-  likely: "text-sky-800 bg-sky-50 border-sky-200",
-  possible: "text-amber-800 bg-amber-50 border-amber-200",
-  uncertain: "text-stone-600 bg-stone-100 border-stone-300",
+  confident: "bg-confident-surface text-confident-ink",
+  likely: "bg-likely-surface text-likely-ink",
+  possible: "bg-possible-surface text-possible-ink",
+  uncertain: "bg-uncertain-surface text-uncertain-ink",
 };
 
 export function ConfidenceWord({ word }: { word: string }) {
@@ -19,7 +18,7 @@ export function ConfidenceWord({ word }: { word: string }) {
       data-testid="confidence-word"
       role="status"
       aria-label={`confidence: ${word}`}
-      className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium lowercase ${token}`}
+      className={`border-hairline inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium lowercase ${token}`}
     >
       {word}
     </span>

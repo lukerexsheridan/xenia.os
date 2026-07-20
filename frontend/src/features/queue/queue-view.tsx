@@ -11,6 +11,9 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { ConfidenceWord } from "@/components/ui/confidence-word";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorNotice } from "@/components/ui/error-notice";
+import { CardSkeleton } from "@/components/ui/skeleton";
 import { api, type DeclineChip, type DecisionKind, type QueueItem } from "@/lib/api/client";
 
 const CHIPS: { value: DeclineChip; label: string }[] = [
@@ -25,38 +28,42 @@ const CHIPS: { value: DeclineChip; label: string }[] = [
 export function QueueView() {
   const queue = useQuery({ queryKey: ["queue"], queryFn: api.queue });
 
-  if (queue.isPending) return <p className="text-sm text-stone-500">Fetching this week…</p>;
-  if (queue.isError) return <p className="text-sm text-red-800">{queue.error.message}</p>;
+  if (queue.isPending)
+    return (
+      <div className="max-w-2xl space-y-4">
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+    );
+  if (queue.isError) return <ErrorNotice message={queue.error.message} />;
 
   const ranked = queue.data.items.filter((item) => item.polarity === "recommended");
   const excluded = queue.data.items.filter((item) => item.polarity === "excluded");
 
   if (ranked.length === 0 && excluded.length === 0) {
     return (
-      <div data-testid="empty-week" className="max-w-prose">
-        <h2 className="font-serif text-xl">A quiet week — deliberately.</h2>
-        <p className="mt-2 text-sm text-stone-600">
-          Nothing this week met the bar, so nothing is here. I don&apos;t pad the queue: when
-          discovery runs thin I say so and keep looking. You&apos;ll see what I checked, and next
-          Monday starts fresh.
-        </p>
-      </div>
+      <EmptyState title="A quiet week — deliberately." testId="empty-week">
+        Nothing this week met the bar, so nothing is here. I don&apos;t pad the queue: when
+        discovery runs thin I say so and keep looking. You&apos;ll see what I checked, and next
+        Monday starts fresh.
+      </EmptyState>
     );
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
-      <p className="text-sm text-stone-500">
+    <div className="animate-settle-in max-w-2xl space-y-4">
+      <p className="text-ink-muted text-sm">
         Week {queue.data.week_key} — {ranked.length} recommended, ranked. One decision per card.
       </p>
       {ranked.map((item) => (
         <QueueCard key={item.recommendation_id} item={item} />
       ))}
       {excluded.length > 0 && (
-        <section data-testid="visible-exclusions" className="border-t border-stone-200 pt-4">
-          <h3 className="text-sm font-medium text-stone-700">Ruled out, with reasons</h3>
+        <section data-testid="visible-exclusions" className="border-hairline border-t pt-4">
+          <h3 className="text-ink text-sm font-medium">Ruled out, with reasons</h3>
           {excluded.map((item) => (
-            <p key={item.recommendation_id} className="mt-2 text-sm text-stone-600">
+            <p key={item.recommendation_id} className="text-ink-muted mt-2 text-sm">
               {item.exclusion_reason}
             </p>
           ))}
@@ -93,10 +100,10 @@ function QueueCard({ item }: { item: QueueItem }) {
   return (
     <article
       data-testid="queue-card"
-      className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm"
+      className="transition-settle rounded-card border-hairline bg-surface shadow-card border p-4"
     >
-      <header className="flex items-baseline justify-between">
-        <h3 className="font-serif text-lg">
+      <header className="flex items-baseline justify-between gap-3">
+        <h3 className="text-ink font-serif text-lg">
           {item.rank}.{" "}
           <Link
             to="/prospects/$prospectId"
@@ -108,29 +115,29 @@ function QueueCard({ item }: { item: QueueItem }) {
         </h3>
         <ConfidenceWord word={item.confidence_word} />
       </header>
-      <ul className="mt-2 space-y-1 text-sm text-stone-700">
+      <ul className="text-ink-muted mt-2 space-y-1 text-sm">
         {item.components.slice(0, 3).map((component, index) => (
           <li key={index}>
             {component.dna_statement} — {component.signal_name.replaceAll("_", " ")}
           </li>
         ))}
       </ul>
-      {item.rank_reason && <p className="mt-2 text-xs text-stone-500">{item.rank_reason}</p>}
+      {item.rank_reason && <p className="text-ink-faint mt-2 text-xs">{item.rank_reason}</p>}
       {resolution ? (
-        <p data-testid="resolution" className="mt-3 text-sm font-medium text-stone-800">
+        <p data-testid="resolution" className="animate-settle-in text-ink mt-3 text-sm font-medium">
           {resolution}
         </p>
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             data-testid="pursue"
-            className="rounded bg-stone-900 px-3 py-1 text-sm text-white"
+            className="transition-settle rounded-control bg-accent text-accent-ink px-3 py-1.5 text-sm font-medium hover:opacity-90"
             onClick={() => decide.mutate({ kind: "pursue" })}
           >
             Pursue
           </button>
           <button
-            className="rounded border border-stone-300 px-3 py-1 text-sm"
+            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
             onClick={() => decide.mutate({ kind: "accept" })}
           >
             Good call
@@ -138,7 +145,7 @@ function QueueCard({ item }: { item: QueueItem }) {
           <button
             data-testid="decline"
             aria-label="decline this recommendation"
-            className="rounded border border-stone-300 px-3 py-1 text-sm"
+            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
             onClick={() => setChipsOpen(true)}
           >
             Decline
@@ -147,7 +154,7 @@ function QueueCard({ item }: { item: QueueItem }) {
             <Link
               to="/prospects/$prospectId"
               params={{ prospectId: item.prospect_id }}
-              className="ml-auto text-sm text-sky-800 underline"
+              className="text-accent ml-auto text-sm underline underline-offset-2"
             >
               Read the brief
             </Link>
@@ -155,20 +162,20 @@ function QueueCard({ item }: { item: QueueItem }) {
         </div>
       )}
       {chipsOpen && !resolution && (
-        <div data-testid="chips" className="mt-2 flex flex-wrap gap-1.5">
+        <div data-testid="chips" className="animate-settle-in mt-2 flex flex-wrap gap-1.5">
           {CHIPS.map((chip) => (
             <button
               key={chip.value}
               data-testid={`chip-${chip.value}`}
               aria-label={`decline: ${chip.label}`}
-              className="rounded-full border border-stone-300 px-2.5 py-0.5 text-xs"
+              className="transition-settle border-hairline text-ink hover:bg-paper rounded-full border px-2.5 py-1 text-xs"
               onClick={() => decide.mutate({ kind: "decline", chip: chip.value })}
             >
               {chip.label}
             </button>
           ))}
           <button
-            className="px-2 py-0.5 text-xs text-stone-500"
+            className="text-ink-faint px-2 py-1 text-xs"
             onClick={() => decide.mutate({ kind: "decline" })}
           >
             just decline

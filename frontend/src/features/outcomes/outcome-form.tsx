@@ -35,14 +35,14 @@ export function OutcomeForm({ prospectId }: { prospectId: string }) {
   });
 
   return (
-    <section data-testid="outcome-form" className="mt-8 border-t border-stone-200 pt-4">
-      <h3 className="text-sm font-medium text-stone-700">What happened?</h3>
+    <section data-testid="outcome-form" className="border-hairline mt-8 border-t pt-4">
+      <h3 className="text-ink text-sm font-medium">What happened?</h3>
       <div className="mt-2 flex flex-wrap gap-2">
         {STAGES.map((stage) => (
           <button
             key={stage.kind}
             data-testid={`outcome-${stage.kind}`}
-            className="rounded border border-stone-300 px-3 py-1 text-sm"
+            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
             onClick={() => record.mutate(stage.kind)}
           >
             {stage.label}
@@ -50,7 +50,7 @@ export function OutcomeForm({ prospectId }: { prospectId: string }) {
         ))}
       </div>
       {note && (
-        <p data-testid="outcome-note" className="mt-3 text-sm text-stone-800">
+        <p data-testid="outcome-note" className="animate-settle-in text-ink mt-3 text-sm">
           {note}
         </p>
       )}

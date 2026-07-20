@@ -38,45 +38,45 @@ export function DraftPanel({ prospectId }: { prospectId: string }) {
   const body = text ?? draft.data?.body ?? null;
 
   return (
-    <section data-testid="draft-panel" className="mt-8 border-t border-stone-200 pt-4">
-      <h3 className="text-sm font-medium text-stone-700">Your opener — a starting point</h3>
+    <section data-testid="draft-panel" className="border-hairline mt-8 border-t pt-4">
+      <h3 className="text-ink text-sm font-medium">Your opener — a starting point</h3>
       {body === null ? (
         <button
           data-testid="compose-draft"
-          className="mt-2 rounded border border-stone-300 px-3 py-1 text-sm"
+          className="transition-settle rounded-control border-hairline text-ink hover:bg-paper mt-2 border px-3 py-1.5 text-sm"
           onClick={() => compose.mutate()}
         >
           Draft an opener from the brief
         </button>
       ) : (
-        <div className="mt-2">
+        <div className="animate-settle-in mt-2">
           <textarea
             data-testid="draft-body"
-            className="w-full rounded border border-stone-300 p-3 text-[15px]"
+            className="rounded-card border-hairline bg-surface text-ink w-full border p-3 font-serif text-[1.0625rem] leading-[1.65]"
             rows={6}
             value={body}
             onChange={(event) => setText(event.target.value)}
           />
-          <div className="mt-1 flex gap-2">
+          <div className="mt-2 flex gap-2">
             <button
-              className="rounded bg-stone-900 px-3 py-1 text-sm text-white"
+              className="transition-settle rounded-control bg-accent text-accent-ink px-3 py-1.5 text-sm font-medium hover:opacity-90"
               onClick={() => body && save.mutate(body)}
             >
               Save my edit
             </button>
             <button
-              className="rounded border border-stone-300 px-3 py-1 text-sm"
+              className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
               onClick={() => void navigator.clipboard.writeText(body)}
             >
               Copy
             </button>
           </div>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="text-ink-faint mt-1.5 text-xs">
             Always a draft, never sent by me — it goes out from your own email, in your name.
           </p>
         </div>
       )}
-      {note && <p className="mt-2 text-sm text-stone-600">{note}</p>}
+      {note && <p className="animate-settle-in text-ink-muted mt-2 text-sm">{note}</p>}
     </section>
   );
 }

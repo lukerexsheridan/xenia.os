@@ -21,7 +21,7 @@ import { api, clearToken, getToken } from "@/lib/api/client";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <div className="min-h-screen bg-stone-50 text-stone-900">
+    <div className="bg-paper text-ink min-h-screen">
       <Outlet />
     </div>
   ),
@@ -41,23 +41,38 @@ const shellRoute = createRoute({
   },
   component: () => (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <header className="flex items-baseline justify-between border-b border-stone-200 pb-4">
-        <h1 className="font-serif text-xl">Xenia</h1>
-        <nav className="flex gap-4 text-sm">
-          <Link to="/" activeProps={{ className: "font-semibold" }}>
+      <header className="border-hairline flex items-baseline justify-between border-b pb-4">
+        <h1 className="text-ink font-serif text-xl">Xenia</h1>
+        <nav className="text-ink-muted flex gap-5 text-sm">
+          <Link
+            to="/"
+            className="transition-settle hover:text-ink"
+            activeProps={{ className: "font-medium text-ink" }}
+          >
             This week
           </Link>
-          <Link to="/dna" activeProps={{ className: "font-semibold" }}>
+          <Link
+            to="/dna"
+            className="transition-settle hover:text-ink"
+            activeProps={{ className: "font-medium text-ink" }}
+          >
             Your DNA
           </Link>
-          <Link to="/interview" activeProps={{ className: "font-semibold" }}>
+          <Link
+            to="/interview"
+            className="transition-settle hover:text-ink"
+            activeProps={{ className: "font-medium text-ink" }}
+          >
             Interview
           </Link>
-          <button className="text-stone-500" onClick={() => void api.downloadProspectsCsv()}>
+          <button
+            className="transition-settle hover:text-ink"
+            onClick={() => void api.downloadProspectsCsv()}
+          >
             Export
           </button>
           <button
-            className="text-stone-400"
+            className="transition-settle text-ink-faint hover:text-ink"
             onClick={() => {
               clearToken();
               window.location.assign("/signin");

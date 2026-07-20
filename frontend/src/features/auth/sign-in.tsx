@@ -1,10 +1,8 @@
 /**
- * Alpha sign-in: paste a Supabase access token (Doc 10, Sprint 17).
- *
- * The hosted Supabase auth UI arrives with the deployed environment
- * (Epic 11); at alpha, design-partner accounts are seeded and tokens issued
- * directly. Identity verification stays entirely server-side — this screen
- * only stores the bearer token the API will verify.
+ * Alpha sign-in: paste a Supabase access token (ADR-012 — a GA blocker by
+ * its own terms; the hosted flow arrives in V1.1 Phase 3). Identity
+ * verification stays entirely server-side — this screen only stores the
+ * bearer token the API will verify.
  */
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -27,26 +25,26 @@ export function SignIn() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-24">
-      <h1 className="font-serif text-2xl">Xenia</h1>
-      <p className="mt-2 text-sm text-stone-600">
+    <main className="animate-settle-in mx-auto max-w-md px-6 py-24">
+      <h1 className="text-ink font-serif text-2xl">Xenia</h1>
+      <p className="text-ink-muted mt-2 text-sm leading-relaxed">
         Your access token, please — your account team will have sent it.
       </p>
       <textarea
         data-testid="token-input"
-        className="mt-4 w-full rounded border border-stone-300 p-2 font-mono text-xs"
+        className="rounded-card border-hairline bg-surface text-ink mt-4 w-full border p-3 font-mono text-xs"
         rows={4}
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
       <button
         data-testid="sign-in"
-        className="mt-3 rounded bg-stone-900 px-4 py-2 text-sm text-white"
+        className="transition-settle rounded-control bg-accent text-accent-ink mt-3 px-4 py-2 text-sm font-medium hover:opacity-90"
         onClick={() => void submit()}
       >
         Sign in
       </button>
-      {error && <p className="mt-3 text-sm text-red-800">{error}</p>}
+      {error && <p className="animate-settle-in text-danger-ink mt-3 text-sm">{error}</p>}
     </main>
   );
 }

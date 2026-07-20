@@ -6,6 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { ConfidenceWord } from "@/components/ui/confidence-word";
+import { TextSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 
 export function BriefView({ prospectId }: { prospectId: string }) {
@@ -15,10 +16,15 @@ export function BriefView({ prospectId }: { prospectId: string }) {
     retry: false,
   });
 
-  if (brief.isPending) return <p className="text-sm text-stone-500">Opening the brief…</p>;
+  if (brief.isPending)
+    return (
+      <div className="max-w-prose">
+        <TextSkeleton lines={8} />
+      </div>
+    );
   if (brief.isError)
     return (
-      <p data-testid="no-brief" className="max-w-prose text-sm text-stone-600">
+      <p data-testid="no-brief" className="text-ink-muted max-w-prose text-sm leading-relaxed">
         No approved brief here yet. Briefs reach you only after review — when this one clears, it
         appears.
       </p>
@@ -26,23 +32,23 @@ export function BriefView({ prospectId }: { prospectId: string }) {
 
   const data = brief.data;
   return (
-    <article data-testid="brief" className="max-w-prose">
+    <article data-testid="brief" className="animate-settle-in max-w-prose">
       <header className="flex items-baseline justify-between">
-        <p className="text-xs tracking-wide text-stone-500 uppercase">Research brief</p>
+        <p className="text-ink-faint text-xs tracking-wide uppercase">Research brief</p>
         <ConfidenceWord word={data.confidence_word} />
       </header>
       {data.sections.map((section) => (
         <section key={section.code} className="mt-6">
-          <h3 className="font-serif text-lg">{section.title}</h3>
-          <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line text-stone-800">
+          <h3 className="text-ink font-serif text-lg">{section.title}</h3>
+          <p className="text-ink mt-1 font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-line">
             {section.content}
           </p>
         </section>
       ))}
       {data.couldnt_see.length > 0 && (
-        <section className="mt-8 rounded border border-stone-200 bg-stone-50 p-3">
-          <h3 className="text-sm font-medium text-stone-700">What I couldn&apos;t see</h3>
-          <ul className="mt-1 list-disc pl-5 text-sm text-stone-600">
+        <section className="rounded-card border-hairline bg-paper mt-8 border p-4">
+          <h3 className="text-ink text-sm font-medium">What I couldn&apos;t see</h3>
+          <ul className="text-ink-muted mt-1 list-disc pl-5 text-sm leading-relaxed">
             {data.couldnt_see.map((entry, index) => (
               <li key={index}>{entry}</li>
             ))}
@@ -50,12 +56,12 @@ export function BriefView({ prospectId }: { prospectId: string }) {
         </section>
       )}
       <section className="mt-8">
-        <h3 className="text-sm font-medium text-stone-700">Receipts</h3>
-        <ol className="mt-1 text-sm text-stone-600">
+        <h3 className="text-ink text-sm font-medium">Receipts</h3>
+        <ol className="text-ink-muted mt-1 text-sm leading-relaxed">
           {data.receipts.map((receipt) => (
             <li key={receipt.number} className="mt-1">
               [{receipt.number}] {receipt.claim}{" "}
-              <span className="text-xs text-stone-400">
+              <span className="text-ink-faint text-xs">
                 (observed {receipt.observed_at.slice(0, 10)})
               </span>
             </li>
@@ -65,7 +71,7 @@ export function BriefView({ prospectId }: { prospectId: string }) {
       <p className="mt-8">
         <button
           data-testid="export-brief-pdf"
-          className="text-sm text-sky-800 underline"
+          className="text-accent text-sm underline underline-offset-2"
           onClick={() => void api.downloadBriefPdf(prospectId)}
         >
           Export as PDF

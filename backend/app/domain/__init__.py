@@ -11,8 +11,12 @@ amendment): Workspace, User (Epic 1); IdealClientDna (`dna.Dna`) with
 DnaElement, DnaChangeEvent, DnaProposal; DelegationGrant with the
 never-automatic floor; the confidence vocabulary; Prospect and the Ring-2
 BusinessRecord; SuppressionEntry (the one documented tenancy-spanning class);
-Decision, Correction, Outcome; the AuditEntry stream (Epic 2).
+Decision, Correction, Outcome; the AuditEntry stream (Epic 2); Evidence with
+the E1-E5 taxonomy and the deterministic receipt table, ResearchBrief with
+the B1-B8 structure and its completeness floor, the rubric dimensions
+(Epic 3).
 
-Still to arrive with their epics: Evidence and the receipt machinery
-(Epic 5), ResearchBrief (Epic 7), Recommendation (Epic 8), Draft, Memory.
+Still to arrive with their epics: the evidence graph and span-grounding
+(Epic 5), machine composition and the L0 battery (Epic 7), Recommendation
+(Epic 8), Draft, Memory.
 """

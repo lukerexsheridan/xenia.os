@@ -17,8 +17,10 @@ repos:
       - id: check-added-large-files
       - id: detect-private-key
 
+  # Pinned to the same ruff version the dev environment uses (pyproject/uv.lock):
+  # a version skew here makes the hook and `make check` fight over formatting.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.15.22
     hooks:
       - id: ruff
         args: [--fix]

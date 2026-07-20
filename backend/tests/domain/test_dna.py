@@ -285,3 +285,37 @@ def test_unknown_element_lookup_fails_loudly() -> None:
 
     with pytest.raises(DomainRuleViolation, match="no element"):
         make_dna().element(uuid4())
+
+
+# ── The founding moment (Doc 03 C1/C2; Doc 07 §3) ────────────────────────────
+
+
+def test_doc03_c1_the_founding_dna_logs_every_element_from_birth() -> None:
+    from uuid import uuid4
+
+    from app.domain.dna import Dna
+
+    elements = (
+        make_element(origin=ElementOrigin.INTERVIEW, decay_class=DecayClass.CUSTOMER_LAW),
+        make_disqualifier(),
+        make_element(origin=ElementOrigin.VERTICAL_PRIOR),
+    )
+    dna, events = Dna.create(workspace_id=uuid4(), elements=elements, now=NOW)
+    assert dna.version == 1
+    assert dna.endorsed is False  # endorsement is its own moment (Doc 03 §3)
+    assert len(events) == 3
+    by_element = {event.element_id: event for event in events}
+    assert by_element[elements[0].id].author is ChangeAuthor.CUSTOMER
+    assert by_element[elements[1].id].author is ChangeAuthor.CUSTOMER
+    assert by_element[elements[2].id].author is ChangeAuthor.XENIA  # the template's voice
+    assert by_element[elements[2].id].cause is ChangeCause.VERTICAL_PRIOR
+
+
+def test_doc03_c1_the_founding_set_rejects_duplicate_ids() -> None:
+    from uuid import uuid4
+
+    from app.domain.dna import Dna
+
+    element = make_element(origin=ElementOrigin.INTERVIEW)
+    with pytest.raises(DomainRuleViolation, match="duplicate"):
+        Dna.create(workspace_id=uuid4(), elements=(element, element), now=NOW)

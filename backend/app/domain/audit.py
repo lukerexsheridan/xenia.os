@@ -20,6 +20,11 @@ class AuditAction(StrEnum):
 
     WORKSPACE_PROVISIONED = "workspace.provisioned"
     USER_PROVISIONED = "user.provisioned"
+    # Epic 3 — internal workbench actions (Doc 08 §8 audits console acts).
+    PROSPECT_CREATED = "prospect.created"
+    DNA_CREATED = "dna.created"
+    RESEARCH_BRIEF_CREATED = "research_brief.created"
+    RESEARCH_BRIEF_FINALISED = "research_brief.finalised"
 
 
 @dataclass(frozen=True)

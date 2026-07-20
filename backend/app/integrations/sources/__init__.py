@@ -1,12 +1,14 @@
-"""Source adapters — the machinery of Doc 09.
+"""Source acquisition machinery (Doc 09 §5).
 
-One adapter per catalogue source (Doc 05 SS6) implementing a common protocol
-(fetch -> observe -> propose Evidence with provenance), the shared politeness
-engine (per-domain rate limits, robots honour, circuit breakers, honest
-user-agent — N2's single enforcement point), the content-addressed snapshot
-store, per-source trust scoring, and the quarantine switch.
+The politeness engine (Epic 3) is N2's single enforcement point: every fetch
+in the system flows through it — per-domain rate limits, robots honour, an
+honest User-Agent, circuit breakers that back off and never evade. The
+HttpxTransport is its plumbing.
 
-V1 alpha families (Doc 09 SS13's cut): Companies House, ad transparency
-libraries, company websites, hiring surfaces. Built from Epic 3/4
-(Sprints 5-8). Empty by design in the skeleton.
+Per-source adapters (Companies House, ad transparency libraries, company
+websites, hiring surfaces — Doc 09 §13's alpha cut) arrive in Epic 4 and all
+sit on top of the engine, along with per-source trust scoring and the
+quarantine switch.
+
+May import: app.domain, app.core. May be imported by: app.services.
 """

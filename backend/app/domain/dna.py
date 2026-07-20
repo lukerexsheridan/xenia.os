@@ -282,6 +282,38 @@ class Dna:
     elements: tuple[DnaElement, ...]
     endorsed: bool = False
 
+    @classmethod
+    def create(
+        cls,
+        *,
+        workspace_id: UUID,
+        elements: tuple[DnaElement, ...],
+        now: datetime,
+    ) -> tuple["Dna", tuple[DnaChangeEvent, ...]]:
+        """The founding moment (Doc 03 C1/C2): the interview's transcription
+        becomes the first DNA, every element logged from birth. Customer-voiced
+        elements are authored by the customer; vertical-prior template elements
+        by Xenia. The DNA starts unendorsed — endorsement is its own moment."""
+        if len({element.id for element in elements}) != len(elements):
+            raise DomainRuleViolation("duplicate element ids in the founding set")
+        dna = cls(id=uuid4(), workspace_id=workspace_id, version=1, elements=elements)
+        events = tuple(
+            dna._event(
+                element_id=element.id,
+                cause=_CAUSE_FOR_ORIGIN[element.origin],
+                author=(
+                    ChangeAuthor.CUSTOMER
+                    if element.origin in _CUSTOMER_VOICED_ORIGINS
+                    else ChangeAuthor.XENIA
+                ),
+                before=None,
+                after=element,
+                now=now,
+            )
+            for element in elements
+        )
+        return dna, events
+
     def element(self, element_id: UUID) -> DnaElement:
         for candidate in self.elements:
             if candidate.id == element_id:

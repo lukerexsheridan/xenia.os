@@ -8,16 +8,20 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–2 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–3 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
-> dead-letter, daily heartbeat email, idempotent Stripe webhook receiver. Epic 2:
-> the domain model as pure code — the DNA aggregate and its laws, the delegation
-> ladder with the never-automatic floor, confidence banding, the Prospect/
-> BusinessRecord ring split, SuppressionEntry, and the teaching shapes — with a
-> named-rule test suite (every citable law, doc-referenced) at 100% domain coverage.
-> No AI implementation, no customer-facing features — by design, per the
-> [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 3 (the research workbench) is next.
+> dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
+> domain model as pure code — the DNA aggregate and its laws, the delegation ladder
+> with the never-automatic floor, confidence banding, the ring split, the teaching
+> shapes — named-rule tests at 100% domain coverage. Epic 3: the research workbench —
+> politeness engine (robots honour, rate limits, circuit breakers; never evades),
+> content-addressed snapshot store + fetch CLI, Evidence (E1–E5) with deterministic
+> receipt tables, B1–B8 briefs with frozen receipt tables and replayable derivation
+> records, Editor-authorised internal workbench API, and golden-tested PDF renderers
+> for the brief and DNA document. No AI implementation, no customer-facing features —
+> by design, per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 4 (source
+> adapters) awaits the research-phase gate.
 
 ## Stack
 

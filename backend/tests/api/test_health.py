@@ -18,7 +18,12 @@ def test_readiness_reports_ready_when_database_is_up(db: Engine) -> None:
 
 
 def test_internal_status_reports_queue_depth(db: Engine) -> None:
-    response = TestClient(create_app()).get("/internal/status")
+    from tests.conftest import TEST_EDITOR_SUBJECT, mint_supabase_token
+
+    response = TestClient(create_app()).get(
+        "/internal/status",
+        headers={"Authorization": f"Bearer {mint_supabase_token(TEST_EDITOR_SUBJECT)}"},
+    )
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"

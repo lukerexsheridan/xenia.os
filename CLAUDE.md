@@ -403,24 +403,29 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–2 complete; Epic 3 not started.** Epic 1 laid the load-bearing core:
+**Epics 0–3 complete; Epic 4 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
-permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner on
-first login, audited), the append-only audit stream, DB-backed feature flags, the
-Postgres job queue (`SKIP LOCKED`, retry/backoff, dead-letter) with worker +
-scheduler and a daily heartbeat email, and the idempotent queued Stripe webhook
-receiver. Epic 2 landed the constitution as pure code in `app/domain`: the DNA
-aggregate (ten-category schema, four active; decay asymmetry as a type distinction;
-append-only changelog; proposal/endorsement state machine; conflict hierarchy +
-sovereignty rule; pattern thresholds; score-independent disqualifier precedence),
-the delegation ladder with the never-automatic floor, the four-word confidence
-banding, the Prospect/BusinessRecord ring split, SuppressionEntry, and the
-Decision/Correction/Outcome shapes — every citable rule has a doc-referenced test
-in `backend/tests/domain/` and domain coverage is CI-gated at ≥95%. Nothing is
-persisted for the Epic 2 types yet (their epics own that). Do not add features, AI
-implementation, or customer-facing functionality without explicit instruction — the
-build plan sequences that work behind founder decisions and the research-phase gate.
+permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
+audited), the append-only audit stream, feature flags, the Postgres job queue
+(`SKIP LOCKED`, retry/backoff, dead-letter) with worker + scheduler + heartbeat
+email, and the idempotent Stripe webhook receiver. Epic 2: the constitution as pure
+code in `app/domain` — the DNA aggregate and its laws, the delegation ladder with
+the never-automatic floor, four-word confidence banding, the Prospect/BusinessRecord
+ring split, SuppressionEntry, the teaching shapes — every citable rule has a
+doc-referenced test and domain coverage is CI-gated at ≥95%. Epic 3: the research
+workbench — the politeness engine (N2's single enforcement point:
+`app/integrations/sources/politeness.py`), the content-addressed snapshot store
+(S3/MinIO + Ring-2 provenance rows), the fetch CLI (`python -m app.scripts.fetch`),
+Evidence with the E1–E5 taxonomy and deterministic receipt tables, ResearchBrief
+B1–B8 with the completeness floor, Ring-1 persistence for prospects/DNA (append-only
+changelog)/briefs/edit log, the Editor-authorised internal sub-app at `/internal`
+(its Swagger UI is the workbench's ugly-but-honest surface), deterministic
+golden-file PDF renderers for the brief and the DNA document, and Sentry wiring.
+Source adapters, entity binding, extraction, and the L0 battery belong to Epics 4–7.
+Do not add features, AI implementation, or customer-facing functionality without
+explicit instruction — the build plan sequences that work behind founder decisions
+and the research-phase gate.
 
 ## Conventions worth knowing
 

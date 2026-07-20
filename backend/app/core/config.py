@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     email_from: str = "Xenia <onboarding@resend.dev>"
     heartbeat_email_to: str = ""
 
+    # The honest User-Agent every fetch carries (Doc 09 §5's politeness
+    # engine; N2). Overridden per environment with a real contact URL.
+    politeness_user_agent: str = "XeniaResearch/0.1 (+https://xenia.example/about-our-research)"
+
+    # Auth subjects permitted on the internal workbench/console (Doc 08 §8:
+    # internal access is separately authorised). Comma-separated Supabase subs.
+    editor_auth_subjects: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

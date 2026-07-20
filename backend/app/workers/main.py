@@ -19,6 +19,7 @@ from types import FrameType
 from app.core.config import get_settings
 from app.core.db import session_scope
 from app.core.logging import configure_logging
+from app.core.observability import init_error_reporting
 from app.repositories.jobs import JobQueue
 from app.workers.handlers import JOB_HANDLERS, JobHandler
 from app.workers.schedules import enqueue_due_schedules
@@ -82,6 +83,7 @@ def run_forever() -> None:
 def main() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
+    init_error_reporting(settings)
     run_forever()
 
 

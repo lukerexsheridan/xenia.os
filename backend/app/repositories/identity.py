@@ -55,6 +55,12 @@ class SqlIdentityRepo:
         ).scalar_one()
         return _to_workspace(row)
 
+    def find_workspace(self, workspace_id: UUID) -> Workspace | None:
+        row = self._session.execute(
+            select(WorkspaceRow).where(WorkspaceRow.id == workspace_id)
+        ).scalar_one_or_none()
+        return _to_workspace(row) if row else None
+
     def provision_workspace(
         self, *, name: str, auth_subject: str, email: str | None
     ) -> tuple[Workspace, User]:

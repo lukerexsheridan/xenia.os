@@ -14,6 +14,12 @@ dependencies = [
     "pyjwt[crypto]>=2.10",
     # Epic 1: outbound HTTP for the Resend adapter. Already a transitive test dep.
     "httpx>=0.28",
+    # Epic 3: S3-compatible object storage for snapshots/PDFs (ADR-004).
+    "boto3>=1.43.51",
+    # Epic 3: pure-Python PDF rendering for the workbench documents (no system deps).
+    "fpdf2>=2.8.7",
+    # Epic 3: error reporting from first deploy (ADR-005; DEBT.md repayment).
+    "sentry-sdk[fastapi]>=2.66.0",
 ]
 
 [dependency-groups]
@@ -52,8 +58,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Magic values are fine in assertions; function-level imports are deliberate
-# in fixtures (the app imports only after the environment is prepared).
-"tests/**" = ["PLR2004", "PLC0415"]
+# in fixtures (the app imports only after the environment is prepared);
+# Depends-in-defaults is FastAPI's own idiom for override factories; the E2E
+# flow tests legitimately run long.
+"tests/**" = ["PLR2004", "PLC0415", "B008", "PLR0915"]
 
 # ── mypy ─────────────────────────────────────────────────────────────────────
 

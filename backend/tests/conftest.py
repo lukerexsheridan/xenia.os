@@ -20,12 +20,14 @@ os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://xenia:xenia@localhos
 # ≥32 bytes: HS256 keys below that trip PyJWT's insecure-key warning.
 os.environ.setdefault("SUPABASE_JWT_SECRET", "xenia-test-jwt-secret-0123456789abcdef")
 os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_xenia_test")
+os.environ.setdefault("EDITOR_AUTH_SUBJECTS", "editor-test-subject")
 
 import pytest
 from sqlalchemy import Engine, create_engine, text
 
 TEST_JWT_SECRET = os.environ["SUPABASE_JWT_SECRET"]
 TEST_STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
+TEST_EDITOR_SUBJECT = os.environ["EDITOR_AUTH_SUBJECTS"]
 
 # The non-superuser role the RLS canary runs under: local and CI database
 # users are superusers, which bypass RLS by definition, so asserting isolation
@@ -33,7 +35,21 @@ TEST_STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
 # FORCE ROW LEVEL SECURITY covers.
 RLS_PROBE_ROLE = "xenia_rls_probe"
 
-_TABLES_NEWEST_FIRST = ("jobs", "audit_entries", "users", "workspaces", "feature_flags")
+_TABLES_NEWEST_FIRST = (
+    "edit_log_entries",
+    "research_briefs",
+    "dna_change_events",
+    "dnas",
+    "prospects",
+    "evidence",
+    "source_snapshots",
+    "business_records",
+    "jobs",
+    "audit_entries",
+    "users",
+    "workspaces",
+    "feature_flags",
+)
 
 
 @pytest.fixture(scope="session")

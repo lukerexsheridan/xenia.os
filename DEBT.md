@@ -12,16 +12,13 @@ What was deferred, why, the consequence of leaving it, and the trigger for repay
 
 ---
 
-## 2026-07-20 — Sentry wiring not yet installed
-ADR-005 accepts Sentry "from first deploy"; the SDK is not yet a dependency and
-`SENTRY_DSN` is read but unused. Taken (retroactively logged — it was Epic 0's
-unlogged deferral): the skeleton and Epic 1 have no customer traffic, and structured
-logs cover local/CI. Consequence: unhandled production exceptions rely on Railway
-logs until wired. Repay: before the first staging deploy that serves anyone but the
-founder, and no later than Epic 3 (the workbench, the first real users).
+*No open debt.*
 
 <!-- Repaid 2026-07-20: "Supabase JWT verification is a stub" (2026-07-19) — real
      verifier (JWKS + HS256) shipped in Epic 1 with the authenticated /v1/me route.
      Repaid 2026-07-20: "Worker is a heartbeat loop, not a queue consumer"
      (2026-07-19) — jobs table, SKIP LOCKED consumer, scheduler, retry/backoff and
-     dead-lettering shipped in Epic 1. -->
+     dead-lettering shipped in Epic 1.
+     Repaid 2026-07-20: "Sentry wiring not yet installed" (2026-07-20) — sentry-sdk
+     initialised from both entrypoints in Epic 3 (app/core/observability.py),
+     PII-scrubbed, per ADR-005. -->

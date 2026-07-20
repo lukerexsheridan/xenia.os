@@ -1,6 +1,8 @@
 # Xenia — V1.1 Product Evolution Plan
 
-*Governed by Documents 01–10; deviations require ADRs. This plan turns the
+*Governed by Documents 01–13 — the Product Manifesto (Doc 12) and the
+Product Intelligence Standard (Doc 13) now sit above this plan; deviations
+require ADRs. This plan turns the
 engineering-complete V1 into a product of benchmark quality — Linear,
 Stripe, Mercury, Apple, Notion, Vercel, Wise — without adding a single
 capability the Build Plan did not ratify. V1.1 is a quality phase, not a
@@ -68,11 +70,11 @@ prose; screenshot/demo/VSL assets; iOS anything.
 
 ## 4. Workstreams → phases
 
-Eight workstreams, six phases. Each phase has an exit bar; no phase starts
+Eight workstreams, seven phases. Each phase has an exit bar; no phase starts
 until the previous one's bar is met. One commit discipline, full battery,
 E2E green — unchanged from V1.
 
-### Phase 1 — Foundation: the design system as code *(this session)*
+### Phase 1 — Foundation: the design system as code ✅ *(complete)*
 Design tokens (colour, type, spacing, radius, shadow, blur, motion) as CSS
 custom properties + Tailwind theme; automatic dark mode; the UX-state
 primitives (Skeleton, EmptyState, ErrorNotice) replacing placeholder text;
@@ -82,18 +84,30 @@ utility remains in a feature component; dark mode passes AA on every
 screen; loop-walk E2E green; `docs/design/DESIGN_SYSTEM.md` is review law.
 
 ### Phase 2 — Experience: every screen to the bar
-Screen-by-screen polish against Doc 06's moments: the queue's verdict-first
-rhythm and the deliberate empty week; the brief's three reading depths made
-typographic (above-the-fold verdict block); DNA document as the co-owned
-artefact (category headers, provenance marks, revert surfaced — repaying
-that debt); interview with amendable answers; micro-interactions for the
-named effect (the correction visibly rippling — motion's one constitutional
-job); keyboard shortcuts (j/k queue traversal, 1–6 chips, ⌘K later);
-optimistic patterns audited; component tests for every screen. *Exit:* a
-design partner walks the loop and nothing feels unfinished; frontend
-component coverage covers every feature directory.
+Screen-by-screen elevation against Doc 06's moments and the Manifesto's
+tests (M3, M5, M10, M11): the queue's verdict-first rhythm and the
+deliberate empty week; the brief's three reading depths made typographic
+(the fold: verdict above, reasoning beneath, receipts grounding it — I5);
+the DNA document as the co-owned artefact with **revert surfaced** (I6,
+repaying the debt); the interview with amendable answers (the log begins
+where meaning begins — I6); micro-interactions for the named effect;
+keyboard *reachability* everywhere (focus order, escape retreats, visible
+focus — I2's floor, not its shortcuts); responsiveness; component tests
+for every feature surface. *Exit:* a design partner walks the loop and
+nothing feels unfinished, in either theme.
 
-### Phase 3 — Authentication experience *(repays ADR-012, the GA gate)*
+### Phase 3 — Intelligence: the colleague's ear *(new — governed by Doc 13)*
+The command palette speaking the loop's verbs (I1); the single-key
+vocabulary — j/k traversal, 1–6 chips, enter, esc — discoverable in place
+(I2); recall-over-receipts search (I3); intelligent defaults with narrated
+adaptation (I4); revert-as-fast-as-acting polish on every logged act (I6);
+contextual AI only where judgment already flows, side-by-side and
+declinable (I8). Nothing irreversible consummated from the palette; no
+telemetry-mined anticipation (I10). *Exit:* Monday's ten minutes completed
+without a pointer; every palette command also exists as a visible
+affordance.
+
+### Phase 4 — Authentication experience *(repays ADR-012, the GA gate)*
 The hosted Supabase flow: sign-in/sign-up/magic link, session persistence
 with silent refresh, "remember this device", sign-out everywhere (token
 revocation), session-restoration UX. **Architecture now, biometrics later:**
@@ -106,7 +120,7 @@ passkeys slot in as a Supabase auth method when adopted. Documented as
 `docs/design/AUTH_ARCHITECTURE.md` + an ADR superseding 012. *Exit:* a
 design partner signs up unassisted; ADR-012's fence is demolished.
 
-### Phase 4 — The marketing website
+### Phase 5 — The marketing website
 A separate static site (`website/`, Astro or plain Vite — decided by ADR),
 sharing the design tokens: narrative hero (the employee, not the tool),
 product storytelling in the brief's own typography, an interactive
@@ -116,7 +130,7 @@ rule — our actual posture, which *is* the trust section), FAQ, contact.
 Restrained atmosphere per §2's rulings. *Exit:* Lighthouse ≥95 across the
 board; reads like Stripe, loads like Vercel.
 
-### Phase 5 — Brand & marketing assets
+### Phase 6 — Brand & marketing assets
 `docs/brand/` codifying what Docs 02/06 already imply: voice and
 copywriting rules (the banned register included), logotype and icon usage,
 illustration stance (abstract, evidentiary, never mascots), motion
@@ -125,11 +139,11 @@ structure honouring the honesty rules, launch/social templates, email
 templates matching the weekly brief's plain-text calm. *Exit:* a designer
 or agency could produce on-brand material without a meeting.
 
-### Phase 6 — iOS foundation *(plan, not app)*
+### Phase 7 — iOS foundation *(plan, not app)*
 `docs/design/IOS_FOUNDATION.md`: SwiftUI + The Composable Architecture or
 vanilla MVVM (ADR), navigation mirroring the web's four surfaces, the
 generated-from-OpenAPI contract layer (AP5 satisfied by construction — no
-rule reimplementation), auth per Phase 3's architecture, offline as
+rule reimplementation), auth per Phase 4's architecture, offline as
 read-cache-only (teaching writes require the server's named effect —
 offline queueing of corrections would fake the ten-second contract),
 push for the Monday queue and outcome prompts (finally giving that audit
@@ -140,9 +154,12 @@ Monday without an architecture meeting.
 
 ## 5. Prioritisation logic
 
-Foundation before decoration (tokens unblock every later screen); the auth
-experience outranks the marketing site (a beautiful site funnelling into a
-token-paste box is a broken promise); the site outranks brand-asset volume
+Foundation before decoration (tokens unblock every later screen);
+experience before intelligence (a palette over unpolished screens is
+lipstick — Doc 13 explicitly implements *after* the surfaces it
+accelerates); the auth experience outranks the marketing site (a beautiful
+site funnelling into a token-paste box is a broken promise); the site
+outranks brand-asset volume
 (one great surface beats ten templates); iOS is a foundation document only
 until the web app has earned its polish. Backend work in this phase is
 limited to what experience requires (revert endpoint, auth/session
@@ -150,7 +167,8 @@ surface) — the V1 scope-control rules still bind.
 
 ## 6. Governance
 
-Doc 06 §8 and §12 are review law for every PR in this phase; the Design
-System doc is their executable form. Any new dependency (fonts, icons,
+The Manifesto (M1–M12), the Intelligence Standard (I1–I11), and Doc 06
+§8/§12 are review law for every PR in this phase; the Design System doc is
+their executable form. Any new dependency (fonts, icons,
 site framework) is argued in an ADR against the ten-year question (AP8).
 Nothing ships that makes the product louder.

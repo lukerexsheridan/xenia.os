@@ -69,6 +69,10 @@ test: ## Run backend (pytest) and frontend (vitest) tests
 	cd $(BACKEND) && uv run pytest
 	cd $(FRONTEND) && npm run test
 
+.PHONY: coverage-domain
+coverage-domain: ## Domain coverage gate (Doc 10 Epic 2 DoD: >=95%)
+	cd $(BACKEND) && uv run pytest --cov=app.domain --cov-fail-under=95
+
 .PHONY: check
 check: lint format-check typecheck import-lint test ## Everything CI runs
 	@echo "✓ all checks passed"

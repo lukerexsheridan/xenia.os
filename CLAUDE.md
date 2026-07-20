@@ -68,18 +68,24 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epic 1 (Foundations) complete; Epic 2 not started.** On top of the Epic 0 skeleton
-the load-bearing core now exists: Workspace/User with workspace-scoped repositories
-and Postgres RLS (enabled + forced on Ring-1 tables — the tenancy canary in
-`backend/tests/repositories/test_rls.py` is permanent), Supabase JWT verification
-(`/v1/me` provisions workspace + owner on first login, audited), the append-only
-audit stream, DB-backed feature flags, the Postgres job queue (`SKIP LOCKED`,
-retry/backoff, dead-letter) with worker + scheduler and a daily heartbeat email
-(Resend), and the idempotent queued Stripe webhook receiver. The domain rules
-ontology (DNA, delegation, confidence…) is Epic 2. Do not add features, AI
-implementation, or customer-facing functionality without explicit instruction —
-the build plan sequences that work behind founder decisions and the
-research-phase gate.
+**Epics 0–2 complete; Epic 3 not started.** Epic 1 laid the load-bearing core:
+Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
+on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
+permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner on
+first login, audited), the append-only audit stream, DB-backed feature flags, the
+Postgres job queue (`SKIP LOCKED`, retry/backoff, dead-letter) with worker +
+scheduler and a daily heartbeat email, and the idempotent queued Stripe webhook
+receiver. Epic 2 landed the constitution as pure code in `app/domain`: the DNA
+aggregate (ten-category schema, four active; decay asymmetry as a type distinction;
+append-only changelog; proposal/endorsement state machine; conflict hierarchy +
+sovereignty rule; pattern thresholds; score-independent disqualifier precedence),
+the delegation ladder with the never-automatic floor, the four-word confidence
+banding, the Prospect/BusinessRecord ring split, SuppressionEntry, and the
+Decision/Correction/Outcome shapes — every citable rule has a doc-referenced test
+in `backend/tests/domain/` and domain coverage is CI-gated at ≥95%. Nothing is
+persisted for the Epic 2 types yet (their epics own that). Do not add features, AI
+implementation, or customer-facing functionality without explicit instruction — the
+build plan sequences that work behind founder decisions and the research-phase gate.
 
 ## Conventions worth knowing
 

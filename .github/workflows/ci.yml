@@ -50,8 +50,8 @@ jobs:
         run: uv run mypy app tests
       - name: Dependency direction (import-linter, AP2)
         run: uv run lint-imports
-      - name: Tests (pytest)
-        run: uv run pytest
+      - name: Tests (pytest) + domain coverage gate (Doc 10 Epic 2 DoD, ≥95%)
+        run: uv run pytest --cov=app.domain --cov-fail-under=95
       - name: Migrations apply cleanly
         run: uv run alembic upgrade head
       - name: Migration drift lint (alembic check)

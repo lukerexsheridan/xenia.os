@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–6 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–7 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -29,7 +29,13 @@ this codebase implements them and any deviation requires an ADR
 > absent per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md). Epic 6: research
 > orchestration — cache-aware cold/delta/refresh recipes, binding fetch budgets,
 > coverage + couldn't-see computed from the plan, per-stage ledgers, and the
-> queued idempotent research run. Epic 7 (brief composition + L0) is next.
+> queued idempotent research run. Epic 7: brief generation — the contained
+> composition pipeline (B1–B8 against a frozen receipt table, bounded
+> regeneration), the deterministic L0 validator battery holding the only door
+> (citation binding, structure, banned vocabulary, false precision, entity
+> consistency), machine briefs stored as DRAFTs with full derivation behind the
+> Editor gate, the rubric ship bar (≥16/20, no dimension <2, accuracy-0 zeroes),
+> and the QA-delta dial. Epic 8 (recommendations + decisions) is next.
 
 ## Stack
 

@@ -41,6 +41,7 @@ _TABLES_NEWEST_FIRST = (
     "canonical_content",
     "entity_binding_reviews",
     "source_health_events",
+    "rubric_scores",
     "edit_log_entries",
     "research_briefs",
     "dna_change_events",

@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–6 complete; Epic 7 not started.** Epic 1: the load-bearing core —
+**Epics 0–7 complete; Epic 8 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -480,7 +480,19 @@ never re-crawl), recipe fetch budgets that bind structurally and degrade into
 honest couldn't-see, per-family coverage reports computed from the plan, the
 per-stage ledger, and "research this business" as one queued idempotent job
 (research_run) whose retry resumes past completed work by construction.
-Composition and the L0 battery belong to Epic 7.
+Epic 7: brief generation — the contained composition pipeline
+(`app/ai/pipelines/compose_brief.py`: B1–B8 against a frozen numbered receipt
+table, bounded regeneration MAX_ATTEMPTS=2 with failures fed back), the
+deterministic L0 battery (`app/ai/validation/l0.py`: citation binding,
+structure, banned vocabulary, false-precision regex, entity consistency — pure
+code holds the only door), machine briefs stored as DRAFTs with full derivation
+(pipeline/prompt versions + receipt-table evidence IDs) so the Editor gate
+remains the only exit, the rubric ship bar in `app/domain/rubric.py`
+(≥16/20, no dimension <2, accuracy-0 zeroes the brief), rubric persistence +
+the QA-delta dial (`quality_report`: unedited-pass = ship-bar pass AND zero
+edit-log entries), and the CI golden-regression job now genuinely runs
+`pytest tests/ai` when `backend/app/ai/` changes.
+Recommendations, decisions, and learning belong to Epic 8.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

@@ -14,9 +14,9 @@ from sqlalchemy import select
 
 from app.domain.evidence import EvidenceType, ReceiptRow
 from app.domain.research_brief import BriefSection, BriefSectionCode, ResearchBrief
-from app.domain.rubric import RubricDimension
+from app.domain.rubric import RubricDimension, RubricScore
 from app.repositories.base import WorkspaceScopedRepository
-from app.repositories.orm import EditLogEntryRow, ResearchBriefRow
+from app.repositories.orm import EditLogEntryRow, ResearchBriefRow, RubricScoreRow
 
 
 class BriefStatus(StrEnum):
@@ -91,7 +91,9 @@ class StoredResearchBrief:
 
 
 class SqlResearchBriefRepo(WorkspaceScopedRepository):
-    def add(self, brief: ResearchBrief) -> StoredResearchBrief:
+    def add(
+        self, brief: ResearchBrief, *, derivation: dict[str, Any] | None = None
+    ) -> StoredResearchBrief:
         row = ResearchBriefRow(
             id=brief.id,
             workspace_id=self._workspace_id,
@@ -101,6 +103,7 @@ class SqlResearchBriefRepo(WorkspaceScopedRepository):
             sections=[_section_to_json(section) for section in brief.sections],
             couldnt_see=list(brief.couldnt_see),
             confidence_score=brief.confidence_score,
+            derivation=derivation,
         )
         self._session.add(row)
         self._session.flush()
@@ -156,6 +159,51 @@ class SqlResearchBriefRepo(WorkspaceScopedRepository):
             .order_by(EditLogEntryRow.created_at, EditLogEntryRow.id)
         ).scalars()
         return [(RubricDimension(row.rubric_dimension), row.note) for row in rows]
+
+    def record_rubric_score(self, brief_id: UUID, score: RubricScore) -> None:
+        """One grading per brief (unique at the database); re-scoring replaces."""
+        existing = self._session.execute(
+            select(RubricScoreRow).where(RubricScoreRow.brief_id == brief_id)
+        ).scalar_one_or_none()
+        if existing is None:
+            existing = RubricScoreRow(workspace_id=self._workspace_id, brief_id=brief_id)
+            self._session.add(existing)
+        existing.accuracy = score.accuracy
+        existing.evidence = score.evidence
+        existing.insight = score.insight
+        existing.fit_reasoning = score.fit_reasoning
+        existing.actionability = score.actionability
+        self._session.flush()
+
+    def quality_report(self) -> dict[str, float | int]:
+        """The QA-delta dial (Doc 10 Sprint 13): unedited-pass = ship-bar
+        rubric pass with zero founder edits — the automation-readiness number
+        Docs 03/07/09 have all been waiting for."""
+        rows = self._session.execute(
+            select(RubricScoreRow).where(RubricScoreRow.workspace_id == self._workspace_id)
+        ).scalars()
+        scored = 0
+        passed = 0
+        unedited_passed = 0
+        for row in rows:
+            score = RubricScore(
+                accuracy=row.accuracy,
+                evidence=row.evidence,
+                insight=row.insight,
+                fit_reasoning=row.fit_reasoning,
+                actionability=row.actionability,
+            )
+            scored += 1
+            if score.meets_ship_bar:
+                passed += 1
+                if not self.list_edits(row.brief_id):
+                    unedited_passed += 1
+        return {
+            "briefs_scored": scored,
+            "ship_bar_passed": passed,
+            "unedited_passed": unedited_passed,
+            "unedited_pass_rate": (unedited_passed / scored) if scored else 0.0,
+        }
 
     def _row(self, brief_id: UUID) -> ResearchBriefRow | None:
         row = self._session.get(ResearchBriefRow, brief_id)

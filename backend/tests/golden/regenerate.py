@@ -25,6 +25,17 @@ def main() -> None:
     (golden_dir / "dna_document_v1.pdf").write_bytes(
         render_dna(fixture_dna(), "Brightpath Digital")
     )
+
+    from app.ai.prompts.compose_brief import render_prompt
+
+    (golden_dir / "compose_brief_prompt_v1.txt").write_text(
+        render_prompt(
+            business_name="Brightpath Ltd",
+            dna_summary="- [LAW] No franchise businesses",
+            receipt_table="[1] (e1) Running ads",
+        )
+        + "\n"  # POSIX trailing newline, matching the pre-commit hook
+    )
     print("golden files regenerated — review the diff before committing")
 
 

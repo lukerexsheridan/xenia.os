@@ -1,7 +1,6 @@
 # CI per Doc 08 §11: ruff + mypy strict, tests, migration lint, OpenAPI export,
-# import-linter (AP2), golden regression when ai/ or prompts/ change (placeholder
-# until pipelines exist), image build. Merge → staging deploys are handled by
-# Railway/Vercel Git integrations watching main.
+# import-linter (AP2), golden regression when ai/ changes, image build. Merge →
+# staging deploys are handled by Railway/Vercel Git integrations watching main.
 name: CI
 
 on:
@@ -64,9 +63,8 @@ jobs:
           name: openapi-schema
           path: backend/openapi.json
 
-  # Golden-set regression gate (Doc 04 §6 / Doc 08 §11). Placeholder until AI
-  # pipelines exist: asserts the golden directory's integrity so the wiring is
-  # already CI-enforced when the first pipeline lands.
+  # Golden-set regression gate (Doc 04 §6 / Doc 08 §11): any change under
+  # backend/app/ai/ must keep the recorded prompt goldens and L0 battery green.
   golden-regression:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -81,11 +79,17 @@ jobs:
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Golden regression (placeholder gate)
+      - name: Set up uv
         if: steps.changed.outputs.run == 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Golden regression suite (Doc 04 §6 — gates AI-touching merges)
+        if: steps.changed.outputs.run == 'true'
+        working-directory: backend
         run: |
-          test -d backend/tests/golden || (echo "golden set missing" && exit 1)
-          echo "AI code changed — golden regression suite will gate here once pipelines exist (Doc 04 §6)."
+          uv sync --frozen
+          uv run pytest tests/ai -q
 
   frontend:
     runs-on: ubuntu-latest

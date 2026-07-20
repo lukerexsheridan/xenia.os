@@ -43,6 +43,7 @@ RING_1_TABLES = (
     "dna_change_events",
     "research_briefs",
     "edit_log_entries",
+    "rubric_scores",
 )
 
 # The shared world model: facts belong to nobody, judgments stay in Ring 1.
@@ -319,6 +320,26 @@ class ResearchBriefRow(Base):
     derivation: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     finalised_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RubricScoreRow(Base):
+    """The QA-delta dial's substrate (Doc 10 Sprint 13): one grading per brief."""
+
+    __tablename__ = "rubric_scores"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    brief_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("research_briefs.id", ondelete="CASCADE"), unique=True
+    )
+    accuracy: Mapped[int] = mapped_column(Integer)
+    evidence: Mapped[int] = mapped_column(Integer)
+    insight: Mapped[int] = mapped_column(Integer)
+    fit_reasoning: Mapped[int] = mapped_column(Integer)
+    actionability: Mapped[int] = mapped_column(Integer)
+    scored_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class EditLogEntryRow(Base):

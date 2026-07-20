@@ -18,6 +18,7 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.ai.pipelines.compose_brief import ComposeBrief
 from app.ai.pipelines.extract_page_evidence import ExtractPageEvidence
 from app.ai.providers.openai_responses import OpenAIResponsesProvider
 from app.api.deps import get_db_session
@@ -29,7 +30,7 @@ from app.domain.confidence import ConfidenceBand, band_for
 from app.domain.dna import DecayClass, DnaCategory, ElementOrigin
 from app.domain.evidence import EvidenceType, FreshnessClass
 from app.domain.research_brief import BriefSection, BriefSectionCode, completeness_problems
-from app.domain.rubric import RubricDimension
+from app.domain.rubric import RubricDimension, RubricScore
 from app.domain.signal import Signal
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.sources.http_transport import HttpxTransport
@@ -57,6 +58,7 @@ from app.services.author_research_brief import (
 )
 from app.services.capture_evidence import CaptureEvidence
 from app.services.capture_snapshot import CaptureSnapshot
+from app.services.compose_research_brief import ComposeResearchBrief
 from app.services.create_dna import CreateDna, DnaElementInput
 from app.services.create_prospect import CreateProspect
 from app.services.derive_signals import DeriveSignals
@@ -671,3 +673,93 @@ def run_research(
         signals=[_signal_response(signal) for signal in report.signals],
         ledger=report.ledger,
     )
+
+
+# ── Epic 7: machine composition behind the wall, and the QA-delta dial ───────
+
+
+def get_compose_pipeline() -> ComposeBrief | None:
+    settings = get_settings()
+    if not settings.openai_api_key:
+        return None
+    return ComposeBrief(
+        OpenAIResponsesProvider(api_key=settings.openai_api_key, model=settings.openai_model)
+    )
+
+
+class CompositionResponse(BaseModel):
+    brief: BriefResponse | None
+    l0_problems: list[str]
+    attempts: int
+
+
+@router.post("/workspaces/{workspace_id}/prospects/{prospect_id}/compose-brief")
+def compose_brief(
+    workspace_id: UUID,
+    prospect_id: UUID,
+    session: WorkspaceSessionDep,
+    pipeline: Annotated[ComposeBrief | None, Depends(get_compose_pipeline)],
+) -> CompositionResponse:
+    if pipeline is None:
+        raise NotFoundError("AI composition is not configured (no provider key)")
+    prospect = SqlProspectRepo(session, workspace_id).get(prospect_id)
+    if prospect is None:
+        raise NotFoundError("prospect not found in this workspace")
+    business = SqlBusinessRecordRepo(session).get(prospect.business_record_id)
+    outcome = ComposeResearchBrief(
+        pipeline,
+        SqlResearchBriefRepo(session, workspace_id),
+        SqlProspectRepo(session, workspace_id),
+        SqlEvidenceRepo(session),
+        SqlDnaRepo(session, workspace_id),
+        SqlKnowledgeRepo(session),
+    ).execute(
+        workspace_id=workspace_id,
+        prospect_id=prospect_id,
+        business_name=business.canonical_name if business else "",
+    )
+    return CompositionResponse(
+        brief=_brief_response(outcome.stored) if outcome.stored else None,
+        l0_problems=list(outcome.l0_problems),
+        attempts=outcome.attempts,
+    )
+
+
+class RubricScoreRequest(BaseModel):
+    accuracy: int = Field(ge=0, le=4)
+    evidence: int = Field(ge=0, le=4)
+    insight: int = Field(ge=0, le=4)
+    fit_reasoning: int = Field(ge=0, le=4)
+    actionability: int = Field(ge=0, le=4)
+
+
+class RubricScoreResponse(BaseModel):
+    total: int
+    meets_ship_bar: bool
+
+
+@router.post("/workspaces/{workspace_id}/briefs/{brief_id}/rubric-score")
+def record_rubric_score(
+    workspace_id: UUID,
+    brief_id: UUID,
+    body: RubricScoreRequest,
+    session: WorkspaceSessionDep,
+) -> RubricScoreResponse:
+    repo = SqlResearchBriefRepo(session, workspace_id)
+    if repo.get(brief_id) is None:
+        raise NotFoundError("research brief not found in this workspace")
+    score = RubricScore(
+        accuracy=body.accuracy,
+        evidence=body.evidence,
+        insight=body.insight,
+        fit_reasoning=body.fit_reasoning,
+        actionability=body.actionability,
+    )
+    repo.record_rubric_score(brief_id, score)
+    return RubricScoreResponse(total=score.total, meets_ship_bar=score.meets_ship_bar)
+
+
+@router.get("/workspaces/{workspace_id}/quality-report")
+def quality_report(workspace_id: UUID, session: WorkspaceSessionDep) -> dict[str, float | int]:
+    """The QA-delta dial (Doc 10, Sprint 13): the unedited-pass rate."""
+    return SqlResearchBriefRepo(session, workspace_id).quality_report()

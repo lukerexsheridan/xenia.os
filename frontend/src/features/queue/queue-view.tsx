@@ -8,7 +8,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ConfidenceWord } from "@/components/ui/confidence-word";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -77,6 +77,14 @@ function QueueCard({ item }: { item: QueueItem }) {
   const queryClient = useQueryClient();
   const [chipsOpen, setChipsOpen] = useState(false);
   const [resolution, setResolution] = useState<string | null>(null);
+  const firstChipRef = useRef<HTMLButtonElement | null>(null);
+  const declineRef = useRef<HTMLButtonElement | null>(null);
+
+  // Opening the chips moves focus to the vocabulary; escape retreats and
+  // returns focus where it came from (Doc 13 I2's floor).
+  useEffect(() => {
+    if (chipsOpen) firstChipRef.current?.focus();
+  }, [chipsOpen]);
 
   const decide = useMutation({
     mutationFn: ({ kind, chip }: { kind: DecisionKind; chip?: DeclineChip }) =>
@@ -143,8 +151,10 @@ function QueueCard({ item }: { item: QueueItem }) {
             Good call
           </button>
           <button
+            ref={declineRef}
             data-testid="decline"
             aria-label="decline this recommendation"
+            aria-expanded={chipsOpen}
             className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
             onClick={() => setChipsOpen(true)}
           >
@@ -162,10 +172,22 @@ function QueueCard({ item }: { item: QueueItem }) {
         </div>
       )}
       {chipsOpen && !resolution && (
-        <div data-testid="chips" className="animate-settle-in mt-2 flex flex-wrap gap-1.5">
-          {CHIPS.map((chip) => (
+        <div
+          data-testid="chips"
+          role="group"
+          aria-label="decline reasons"
+          className="animate-settle-in mt-2 flex flex-wrap gap-1.5"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setChipsOpen(false);
+              declineRef.current?.focus();
+            }
+          }}
+        >
+          {CHIPS.map((chip, index) => (
             <button
               key={chip.value}
+              ref={index === 0 ? firstChipRef : undefined}
               data-testid={`chip-${chip.value}`}
               aria-label={`decline: ${chip.label}`}
               className="transition-settle border-hairline text-ink hover:bg-paper rounded-full border px-2.5 py-1 text-xs"

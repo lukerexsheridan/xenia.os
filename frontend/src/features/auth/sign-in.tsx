@@ -7,19 +7,23 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { api, setToken } from "@/lib/api/client";
 
 export function SignIn() {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   async function submit() {
+    setPending(true);
     setToken(value.trim());
     try {
       await api.me();
       await navigate({ to: "/" });
     } catch {
+      setPending(false);
       setError("That token didn't verify. Nothing you did caused this — check it and try again.");
     }
   }
@@ -37,13 +41,15 @@ export function SignIn() {
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
-      <button
+      <Button
         data-testid="sign-in"
-        className="transition-settle rounded-control bg-accent text-accent-ink mt-3 px-4 py-2 text-sm font-medium hover:opacity-90"
+        size="lg"
+        className="mt-3"
+        disabled={pending}
         onClick={() => void submit()}
       >
-        Sign in
-      </button>
+        {pending ? "Checking…" : "Sign in"}
+      </Button>
       {error && <p className="animate-settle-in text-danger-ink mt-3 text-sm">{error}</p>}
     </main>
   );

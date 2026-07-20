@@ -31,13 +31,28 @@ export function BriefView({ prospectId }: { prospectId: string }) {
     );
 
   const data = brief.data;
+  // The fold (Doc 06 §7; Doc 13 I5): the ten-second depth above — identity
+  // and the fit verdict — everything else unfolding beneath. Scrolling is
+  // the disclosure.
+  const FOLD_CODES = ["b1_identity_snapshot", "b5_fit_thesis"];
+  const aboveFold = data.sections.filter((s) => FOLD_CODES.includes(s.code));
+  const belowFold = data.sections.filter((s) => !FOLD_CODES.includes(s.code));
   return (
     <article data-testid="brief" className="animate-settle-in max-w-prose">
       <header className="flex items-baseline justify-between">
         <p className="text-ink-faint text-xs tracking-wide uppercase">Research brief</p>
         <ConfidenceWord word={data.confidence_word} />
       </header>
-      {data.sections.map((section) => (
+      {aboveFold.map((section) => (
+        <section key={section.code} className="mt-6">
+          <h3 className="text-ink font-serif text-lg">{section.title}</h3>
+          <p className="text-ink mt-1 font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-line">
+            {section.content}
+          </p>
+        </section>
+      ))}
+      <hr className="border-hairline mt-8 border-t" aria-hidden="true" />
+      {belowFold.map((section) => (
         <section key={section.code} className="mt-6">
           <h3 className="text-ink font-serif text-lg">{section.title}</h3>
           <p className="text-ink mt-1 font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-line">

@@ -13,6 +13,7 @@ from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
 
 from app.api.internal import console, workbench
 from app.api.internal.deps import get_editor_context
@@ -98,6 +99,14 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
     application.add_middleware(RequestContextMiddleware)
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            origin.strip() for origin in settings.cors_allow_origins.split(",") if origin.strip()
+        ],
+        allow_methods=["*"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
     _register_error_handlers(application)
     application.include_router(v1_router, prefix="/v1")
     application.mount("/internal", _create_internal_app(settings))

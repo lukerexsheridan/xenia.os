@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     # engine; N2). Overridden per environment with a real contact URL.
     politeness_user_agent: str = "XeniaResearch/0.1 (+https://xenia.example/about-our-research)"
 
+    # Browser origins allowed to call the API (the SPA on Vercel; the Vite
+    # dev server locally). Comma-separated; credentials are bearer headers,
+    # never cookies, so no origin wildcard is ever needed.
+    cors_allow_origins: str = "http://localhost:5173"
+
     # Auth subjects permitted on the internal workbench/console (Doc 08 §8:
     # internal access is separately authorised). Comma-separated Supabase subs.
     editor_auth_subjects: str = ""

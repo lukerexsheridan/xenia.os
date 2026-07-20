@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–9 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–10 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -43,8 +43,13 @@ this codebase implements them and any deviation requires an ADR
 > win-reinforcement, and the Monday assembly job. Epic 9: the Editor console —
 > grading queue, approval gate (a brief provably cannot reach `/v1` delivery
 > without finalisation), golden-set management (approved briefs only), source
-> health, and the no-framework console shell at `/internal/console`. Epic 10
-> (the customer-facing app) is next.
+> health, and the no-framework console shell at `/internal/console`. Epic 10:
+> the frontend alpha — the resumable scripted DNA interview founding the DNA
+> from the customer's own words, the endorsement moment, the weekly queue with
+> verdict-first cards, decline chips and visible exclusions, the brief as a
+> typeset document, ten-second corrections with named effects, outcome capture,
+> PDF/CSV export, and the Playwright loop-walk E2E green in CI. Epic 11 (MVP
+> mode: weekly email, drafts, billing, metrics) is next.
 
 ## Stack
 

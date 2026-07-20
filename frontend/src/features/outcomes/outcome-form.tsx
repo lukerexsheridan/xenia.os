@@ -1,0 +1,59 @@
+/**
+ * Outcome capture: ground truth, always yours to state, never inferred
+ * (Doc 03 §7). One tap per stage; the win narrates what it taught.
+ */
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+import { api, type OutcomeKind } from "@/lib/api/client";
+
+const STAGES: { kind: OutcomeKind; label: string }[] = [
+  { kind: "contacted", label: "Contacted" },
+  { kind: "replied", label: "They replied" },
+  { kind: "meeting", label: "Meeting booked" },
+  { kind: "won", label: "Won" },
+  { kind: "lost", label: "Lost" },
+  { kind: "disqualified", label: "Disqualified" },
+];
+
+export function OutcomeForm({ prospectId }: { prospectId: string }) {
+  const queryClient = useQueryClient();
+  const [note, setNote] = useState<string | null>(null);
+
+  const record = useMutation({
+    mutationFn: (kind: OutcomeKind) =>
+      api.recordOutcome(prospectId, kind, new Date().toISOString()),
+    onSuccess: (response) => {
+      setNote(
+        response.reinforced_statements.length > 0
+          ? `Recorded — and I learned from it: ${response.reinforced_statements.join("; ")} now weighs more.`
+          : "Recorded. Ground truth is the most valuable thing you give me.",
+      );
+      void queryClient.invalidateQueries({ queryKey: ["queue"] });
+    },
+    onError: (error) => setNote(error.message),
+  });
+
+  return (
+    <section data-testid="outcome-form" className="mt-8 border-t border-stone-200 pt-4">
+      <h3 className="text-sm font-medium text-stone-700">What happened?</h3>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {STAGES.map((stage) => (
+          <button
+            key={stage.kind}
+            data-testid={`outcome-${stage.kind}`}
+            className="rounded border border-stone-300 px-3 py-1 text-sm"
+            onClick={() => record.mutate(stage.kind)}
+          >
+            {stage.label}
+          </button>
+        ))}
+      </div>
+      {note && (
+        <p data-testid="outcome-note" className="mt-3 text-sm text-stone-800">
+          {note}
+        </p>
+      )}
+    </section>
+  );
+}

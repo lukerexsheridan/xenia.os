@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–9 complete; Epic 10 not started.** Epic 1: the load-bearing core —
+**Epics 0–10 complete; Epic 11 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -517,8 +517,26 @@ reasoning; migration 0007), the source-health page, and the one-file
 no-framework console shell at `/internal/console` (dataless HTML; every byte
 of data comes from the Editor-authorised workbench API). DomainRuleViolation
 now maps to HTTP 422 globally.
-The customer-facing app (auth shell, queue view, brief view, interview,
-correction UX) belongs to Epic 10.
+Epic 10: the frontend alpha — /v1 grew the loop's remaining surfaces (the
+deterministic scripted interview in `app/domain/interview.py` — resumable,
+homework-first, the customer's words become the founding DNA verbatim;
+migration 0008 — GET/POST /v1/interview*, GET /v1/dna + changelog +
+proposals, POST /v1/dna/endorse, brief/DNA PDF export, the N1-safe prospect
+CSV, queue items carrying business_name/has_brief as display data) plus
+CORS (settings-driven origins). The SPA: token sign-in (hosted Supabase auth
+UI arrives with the deployed environment), the authenticated shell, the
+queue with verdict-first cards / decline chips / optimistic-then-server
+acknowledgments / the visible exclusion / the deliberate empty week, the
+brief as a typeset document with receipts and couldn't-see, the DNA document
+with endorsement, ten-second corrections returning the named effect, and
+proposal signatures, the chat-shaped interview, outcome capture narrating
+what a win taught. Types are generated from OpenAPI
+(`npm run generate:api`). The Playwright loop-walk
+(`frontend/e2e/loop-walk.spec.ts`: signup → interview → endorsement → queue
+→ pursue → outcome → correction with named effect) is green and wired into
+CI as the `e2e` job.
+MVP mode (weekly brief email, drafts, billing, metrics panel) belongs to
+Epic 11.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

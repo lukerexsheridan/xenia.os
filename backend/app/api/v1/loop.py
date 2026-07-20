@@ -29,6 +29,7 @@ from app.repositories.jobs import JobQueue
 from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.recommendations import SqlRecommendationRepo
+from app.repositories.research_briefs import SqlResearchBriefRepo
 from app.repositories.teaching import SqlTeachingRepo
 from app.services.apply_correction import ApplyCorrection
 from app.services.assemble_queue import AssembleQueue
@@ -65,12 +66,14 @@ class ScoreComponentResponse(BaseModel):
 class QueueItemResponse(BaseModel):
     recommendation_id: UUID
     prospect_id: UUID
+    business_name: str
     polarity: RecommendationPolarity
     rank: int | None
     confidence_word: str  # one of the four, assigned by domain rule (AP5)
     components: list[ScoreComponentResponse]
     rank_reason: str | None
     exclusion_reason: str | None
+    has_brief: bool  # an approved brief exists one click deep (Doc 06 SS7)
 
 
 class QueueResponse(BaseModel):
@@ -78,10 +81,13 @@ class QueueResponse(BaseModel):
     items: list[QueueItemResponse]
 
 
-def _item_response(recommendation: Recommendation) -> QueueItemResponse:
+def _item_response(
+    recommendation: Recommendation, *, business_name: str, has_brief: bool
+) -> QueueItemResponse:
     return QueueItemResponse(
         recommendation_id=recommendation.id,
         prospect_id=recommendation.prospect_id,
+        business_name=business_name,
         polarity=recommendation.polarity,
         rank=recommendation.rank,
         confidence_word=recommendation.score.band.value,
@@ -97,6 +103,7 @@ def _item_response(recommendation: Recommendation) -> QueueItemResponse:
         ],
         rank_reason=recommendation.rank_reason,
         exclusion_reason=recommendation.exclusion_reason,
+        has_brief=has_brief,
     )
 
 
@@ -104,13 +111,26 @@ def _item_response(recommendation: Recommendation) -> QueueItemResponse:
 def get_queue(session: SessionDep, context: ContextDep) -> QueueResponse:
     """This week's bounded set — ranked items first, the visible exclusion
     at the queue's end (Doc 06 §7). An empty week is an honest week."""
-    repo = SqlRecommendationRepo(session, context.workspace.id)
+    workspace_id = context.workspace.id
+    repo = SqlRecommendationRepo(session, workspace_id)
     week_key = repo.latest_week_key()
     if week_key is None:
         return QueueResponse(week_key="", items=[])
-    return QueueResponse(
-        week_key=week_key, items=[_item_response(item) for item in repo.list_week(week_key)]
-    )
+    prospect_repo = SqlProspectRepo(session, workspace_id)
+    business_repo = SqlBusinessRecordRepo(session)
+    brief_repo = SqlResearchBriefRepo(session, workspace_id)
+    items = []
+    for item in repo.list_week(week_key):
+        prospect = prospect_repo.get(item.prospect_id)
+        record = business_repo.get(prospect.business_record_id) if prospect else None
+        items.append(
+            _item_response(
+                item,
+                business_name=record.canonical_name if record else "this business",
+                has_brief=brief_repo.deliverable_for_prospect(item.prospect_id) is not None,
+            )
+        )
+    return QueueResponse(week_key=week_key, items=items)
 
 
 class DecisionRequest(BaseModel):

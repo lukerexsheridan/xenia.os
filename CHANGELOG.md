@@ -2,6 +2,19 @@
 
 Format: keep-a-changelog-ish; one entry per released state, newest first.
 
+## V1.1 constitution + Phase 2 (in progress) — 2026-07-20
+
+Doc 12 (Product Manifesto, M1–M12) and Doc 13 (Product Intelligence
+Standard, I1–I11) join the constitution; the Evolution Plan gains an
+Intelligence phase (now Phase 3) between Experience and Authentication.
+Phase 2 delivered so far: revert surfaced on the DNA changelog
+(revert-with-log, honest reversibility flags), amendable interview answers
+with the visible transcript, the brief's typographic fold, chip focus
+discipline (focus moves in, escape retreats, aria-expanded), furnished
+empty states, sign-in pending state, responsive shell, and the Button
+primitive on tokens. Remaining for Phase 2's exit bar: component tests for
+outcomes/draft/prospect surfaces and the both-themes screen review.
+
 ## V1.1 Phase 1 — the design system as code — 2026-07-20
 
 Governed by docs/11_V1_1_PRODUCT_EVOLUTION_PLAN.md (six quality phases, no

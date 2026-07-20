@@ -118,6 +118,17 @@ Run the SPA dev server separately with `make dev-frontend` (<http://localhost:51
 | `make revision m="msg"` | New Alembic autogenerate revision |
 | `make openapi` | Export the OpenAPI schema (input to frontend type generation) |
 
+## Deploying (the two-role reality)
+
+Every transaction that touches Ring-1 data attaches its workspace context —
+API requests via the auth dependencies, worker jobs at the top of each
+handler (ADR-010). Managed Postgres typically hands the app an owner-level
+role, under which RLS acts as a canary rather than a wall; where the
+platform permits, run the API as a dedicated non-superuser role subject to
+RLS. Verify any environment with `python -m app.scripts.rls_audit`.
+Sign-in is alpha token-paste (ADR-012): founder-provisioned accounts only
+until the hosted Supabase flow lands.
+
 ## Engineering rules (the short version)
 
 - **Business logic exists only in the backend** (AP5). The frontend renders state and

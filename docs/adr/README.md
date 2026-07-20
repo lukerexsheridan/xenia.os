@@ -20,6 +20,10 @@ face). Constitutional deviations escalate to a document amendment.
 | [007](007-alpha-source-families.md) | Four source families at the ingestion alpha | Accepted |
 | [008](008-entity-binding-floor.md) | Entity-binding confidence floor and the human queue | Accepted |
 | [009](009-evidence-id-scheme.md) | Content-derived Evidence IDs | Accepted |
+| [010](010-tenancy-enforcement-in-deployment.md) | Tenancy enforcement model in deployment | Accepted |
+| [011](011-deterministic-scripted-interview.md) | Deterministic scripted interview at alpha | Accepted |
+| [012](012-alpha-token-sign-in.md) | Alpha token-based sign-in (GA blocker) | Accepted |
+| [013](013-family-level-disqualifier-matching.md) | Family-level disqualifier matching | Accepted |
 
 ## Writing a new ADR
 

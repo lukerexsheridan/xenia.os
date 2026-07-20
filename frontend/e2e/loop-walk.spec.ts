@@ -70,7 +70,11 @@ test("the loop walk: interview to outcome, unassisted", async ({ page, request }
     });
     await page.getByTestId("interview-answer").fill(ANSWERS[state.question_key]);
     await page.getByTestId("interview-send").click();
-    await page.waitForTimeout(200);
+    if (i < 4) {
+      // The component clears the answer box on a successful submit; the
+      // final answer navigates to /dna instead (asserted below).
+      await expect(page.getByTestId("interview-answer")).toHaveValue("", { timeout: 5000 });
+    }
   }
 
   // 3. Endorsement — the DNA becomes a shared agreement.

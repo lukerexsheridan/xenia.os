@@ -17,6 +17,8 @@ export function ConfidenceWord({ word }: { word: string }) {
   return (
     <span
       data-testid="confidence-word"
+      role="status"
+      aria-label={`confidence: ${word}`}
       className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium lowercase ${token}`}
     >
       {word}

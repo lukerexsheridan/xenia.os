@@ -107,6 +107,7 @@ export function DnaView() {
                   data-testid={`withdraw-${element.element_id}`}
                   className="shrink-0 text-xs text-stone-400 hover:text-red-800"
                   title="Wrong — remove this"
+                  aria-label={`wrong — remove: ${element.statement}`}
                   onClick={() => withdraw.mutate(element.element_id)}
                 >
                   wrong — remove

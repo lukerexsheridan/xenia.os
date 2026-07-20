@@ -137,6 +137,7 @@ function QueueCard({ item }: { item: QueueItem }) {
           </button>
           <button
             data-testid="decline"
+            aria-label="decline this recommendation"
             className="rounded border border-stone-300 px-3 py-1 text-sm"
             onClick={() => setChipsOpen(true)}
           >
@@ -159,6 +160,7 @@ function QueueCard({ item }: { item: QueueItem }) {
             <button
               key={chip.value}
               data-testid={`chip-${chip.value}`}
+              aria-label={`decline: ${chip.label}`}
               className="rounded-full border border-stone-300 px-2.5 py-0.5 text-xs"
               onClick={() => decide.mutate({ kind: "decline", chip: chip.value })}
             >

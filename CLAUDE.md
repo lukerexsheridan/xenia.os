@@ -1,4 +1,339 @@
-# CLAUDE.md — AI assistant context for the Xenia repository
+# CLAUDE.md
+
+# Xenia Engineering Operating Manual
+
+This document defines the permanent operating rules for Claude Code when working on Xenia.
+
+These rules apply to every implementation unless the user explicitly overrides them.
+
+---
+
+# Mission
+
+Build Xenia as a world-class software company.
+
+Every engineering decision should optimise for:
+
+- Simplicity
+- Reliability
+- Maintainability
+- Scalability
+- Performance
+- Security
+- Developer experience
+
+Always optimise for long-term quality over short-term speed.
+
+---
+
+# Constitutional Documents
+
+The `docs/` directory is the constitutional source of truth.
+
+Before implementing anything:
+
+1. Read all relevant documentation.
+2. Read all ADRs.
+3. Read the Build Plan.
+4. Review the existing implementation.
+
+If documentation conflicts with code:
+
+- Assume documentation is correct.
+- Explain the conflict.
+- Propose the smallest correction.
+- Stop if the conflict is significant.
+
+Never silently diverge from the documented architecture.
+
+---
+
+# Previous Epic Review
+
+Before beginning a new Epic:
+
+- Review the previous Epic.
+- Verify architectural integrity.
+- Verify dependency direction.
+- Verify documentation consistency.
+- Verify test quality.
+- Verify security.
+- Verify naming consistency.
+- Verify maintainability.
+
+Small improvements may be made immediately.
+
+Major architectural changes must be proposed before implementation continues.
+
+---
+
+# Scope Control
+
+Implement exactly one Epic.
+
+Never implement future Epics.
+
+Never add features outside the current Epic.
+
+Never introduce speculative functionality.
+
+Never build "while we're here" improvements.
+
+---
+
+# Architecture Rules
+
+Follow the documented architecture exactly.
+
+Business logic belongs ONLY in the backend.
+
+Maintain dependency direction.
+
+Respect Clean Architecture boundaries.
+
+Never bypass architectural layers.
+
+Never leak infrastructure into the domain.
+
+Never leak persistence into business logic.
+
+Keep the domain pure.
+
+---
+
+# Engineering Philosophy
+
+Prefer:
+
+- Simple
+- Deterministic
+- Explicit
+- Readable
+- Testable
+
+Avoid:
+
+- Clever abstractions
+- Premature optimisation
+- Hidden behaviour
+- Magic
+- Global state
+- Tight coupling
+
+Every abstraction must have a clear reason to exist.
+
+---
+
+# AI Philosophy
+
+Use AI only where it creates genuine value.
+
+Prefer deterministic software whenever possible.
+
+AI should assist judgement.
+
+AI should never replace deterministic business rules.
+
+Every AI output must be reviewable.
+
+Every AI conclusion must be traceable.
+
+---
+
+# Code Quality
+
+Write production-quality code only.
+
+No temporary hacks.
+
+No undocumented TODOs.
+
+No commented-out code.
+
+No dead code.
+
+No speculative abstractions.
+
+If something can be simplified, simplify it.
+
+---
+
+# Testing
+
+Every feature must include appropriate tests.
+
+Run all relevant checks before completion.
+
+Backend:
+
+- Ruff
+- Formatter
+- Mypy
+- Pytest
+- Import Linter
+- Alembic validation
+
+Frontend:
+
+- ESLint
+- Prettier
+- TypeScript
+- Vitest
+- Production Build
+
+Never ignore warnings without explanation.
+
+---
+
+# Self Review
+
+Before considering work complete:
+
+Perform a senior engineer review.
+
+Review:
+
+- Architecture
+- Simplicity
+- Maintainability
+- Readability
+- Security
+- Performance
+- Error handling
+- Test quality
+- Documentation
+- Naming
+
+Challenge unnecessary complexity.
+
+Refactor anything below the project's standards.
+
+---
+
+# Git Workflow
+
+When all of the following are true:
+
+- Current Epic complete
+- Tests pass
+- Build passes
+- Review passes
+- Documentation updated
+
+Then:
+
+1. Stage relevant files.
+2. Create one logical commit.
+3. Use Conventional Commits.
+
+Examples:
+
+feat(epic-3): implement research workbench
+
+fix(auth): resolve JWT verification
+
+refactor(domain): simplify delegation rules
+
+Never commit broken code.
+
+Never create unnecessary commits.
+
+Never push automatically.
+
+Wait for approval before pushing.
+
+---
+
+# Documentation
+
+Keep documentation synchronised with the implementation.
+
+Update documentation whenever architecture changes.
+
+Update ADRs whenever architectural decisions change.
+
+Never allow documentation drift.
+
+---
+
+# Communication
+
+Before implementation:
+
+Provide:
+
+- Implementation plan
+- Affected files
+- Architectural decisions
+
+After implementation provide:
+
+- Summary
+- Files changed
+- Tests run
+- Build results
+- Review findings
+- Documentation updates
+- Architectural decisions
+- Technical debt
+- Suggested next step
+
+---
+
+# Technical Debt
+
+Do not create technical debt intentionally.
+
+If technical debt is unavoidable:
+
+- Explain why.
+- Record it.
+- Propose a repayment plan.
+
+---
+
+# Continuous Improvement
+
+Leave the repository cleaner than you found it.
+
+Small improvements are encouraged.
+
+Large refactors require approval.
+
+Every Epic should improve the codebase.
+
+---
+
+# Default Behaviour
+
+Unless explicitly instructed otherwise:
+
+- Review the previous Epic.
+- Read the documentation.
+- Stay within the current Epic.
+- Test everything.
+- Review everything.
+- Update documentation.
+- Create one logical commit.
+- Stop and wait for approval.
+
+# Decision Making
+
+When multiple implementations satisfy the requirements:
+
+Choose the solution that is:
+
+1. Simplest.
+2. Most maintainable.
+3. Most aligned with the documented architecture.
+4. Easiest to understand six months from now.
+5. Easiest to extend without rewriting.
+
+Avoid optimising for today's convenience at the expense of tomorrow's maintainability.
+
+---
+
+# Appendix — Project Context
 
 ## What this is
 
@@ -7,10 +342,9 @@ your ideal clients") for founder-led UK performance-marketing agencies. This rep
 **modular monolith**: FastAPI backend (API + worker, one image, two entrypoints) and a
 Vite/React SPA, on PostgreSQL, deployed to Railway + Vercel.
 
-## The constitution comes first
+## The constitution
 
-`docs/01`–`docs/10` are the **source of truth**. Before implementing anything
-non-trivial, read the governing document:
+`docs/01`–`docs/10` are the source of truth; the most-consulted:
 
 - `docs/03_PRODUCT_STRATEGY_AND_V1_SCOPE.md` — what V1 is and (crucially) is NOT
 - `docs/04_INTELLIGENCE_AND_EVALUATION_STANDARD.md` — brief rubric, evaluation harness, failure taxonomy
@@ -58,6 +392,7 @@ make dev          # docker compose stack (api, worker, postgres, minio)
 make dev-frontend # Vite dev server
 make check        # ALL checks — run before claiming anything is done
 make test         # pytest + vitest
+make coverage-domain  # domain coverage gate (>=95%)
 make lint / make format / make typecheck
 make migrate / make revision m="message"
 make openapi      # export OpenAPI schema for frontend codegen

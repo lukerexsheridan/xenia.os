@@ -109,3 +109,24 @@ def test_a_paste_accident_cannot_flood_the_dna_with_laws(db: Engine) -> None:
     )
     assert flood.status_code == 422
     assert "hard lines" in flood.json()["message"]
+
+
+def test_a_visible_exclusion_cannot_be_resolved_by_a_decision(db: Engine) -> None:
+    """Pursuing a ruled-out business is a DNA conversation, not a queue
+    click (Doc 02 §7.10; Doc 04 §4's sovereignty rule)."""
+    from app.domain.signal import SignalFamily
+    from tests.api.test_loop import World
+
+    api = make_client()
+    world = World(db, api)
+    world.add_business("Inhouse", SignalFamily.HIRING, SignalFamily.DISQUALIFIER_TRIGGERS)
+    world.assemble()
+    excluded = next(item for item in world.queue()["items"] if item["polarity"] == "excluded")
+    for kind in ("pursue", "accept", "decline"):
+        response = api.post(
+            f"/v1/recommendations/{excluded['recommendation_id']}/decision",
+            headers=world.headers,
+            json={"kind": kind},
+        )
+        assert response.status_code == 422
+        assert "hard line" in response.json()["message"]

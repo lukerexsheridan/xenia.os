@@ -265,13 +265,22 @@ def rank_reason(above: Candidate, below: Candidate) -> str:
 
 
 def exclusion_reason(candidate: Candidate) -> str:
-    """'Ruled out X — franchise model, your disqualifier' (Doc 03 §5)."""
+    """'Ruled out X — franchise model, your disqualifier' (Doc 03 §5).
+
+    Family-level matching (see `find_disqualifier_matches`) cannot say
+    *which* law a trigger crossed when several exist — so the reason names
+    a specific law only when the attribution is unambiguous. A confidently
+    wrong explanation on the queue's judgment moment would be a fabricated
+    reason wearing a receipt (Doc 04 §8)."""
     match = candidate.disqualified_by[0]
-    return (
-        f"ruled out {candidate.business_name} — "
-        f"{match.signal.name.replace('_', ' ')}, your disqualifier: "
-        f"{match.element.statement}"
-    )
+    trigger = match.signal.name.replace("_", " ")
+    laws = {entry.element.statement for entry in candidate.disqualified_by}
+    if len(laws) == 1:
+        return (
+            f"ruled out {candidate.business_name} — {trigger}, "
+            f"your disqualifier: {match.element.statement}"
+        )
+    return f"ruled out {candidate.business_name} — {trigger}, which crosses your disqualifiers"
 
 
 @dataclass(frozen=True)

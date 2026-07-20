@@ -283,3 +283,40 @@ class TestRecommendationShape:
 
 def test_week_key_is_iso_week() -> None:
     assert week_key_for(datetime(2026, 7, 20, tzinfo=UTC)) == "2026-W30"
+
+
+class TestExclusionAttributionHonesty:
+    def test_a_single_law_is_named(self) -> None:
+        law = element(DnaCategory.DISQUALIFIERS, "No franchise businesses", 1.0)
+        candidate = Candidate(
+            prospect_id=uuid4(),
+            business_name="Franchico",
+            score=ScoreBreakdown(components=()),
+            disqualified_by=(
+                DisqualifierMatch(
+                    element=law,
+                    signal=signal(SignalFamily.DISQUALIFIER_TRIGGERS, "franchise_model"),
+                ),
+            ),
+        )
+        assert "No franchise businesses" in exclusion_reason(candidate)
+
+    def test_multiple_laws_are_never_misattributed(self) -> None:
+        """Family-level matching cannot know which law a trigger crossed;
+        naming one anyway would be a fabricated explanation (Doc 04 §8)."""
+        first = element(DnaCategory.DISQUALIFIERS, "No franchise businesses", 1.0)
+        second = element(DnaCategory.DISQUALIFIERS, "No in-house teams", 1.0)
+        trigger = signal(SignalFamily.DISQUALIFIER_TRIGGERS, "in_house_marketing_team")
+        candidate = Candidate(
+            prospect_id=uuid4(),
+            business_name="Franchico",
+            score=ScoreBreakdown(components=()),
+            disqualified_by=(
+                DisqualifierMatch(element=first, signal=trigger),
+                DisqualifierMatch(element=second, signal=trigger),
+            ),
+        )
+        reason = exclusion_reason(candidate)
+        assert "No franchise businesses" not in reason
+        assert "crosses your disqualifiers" in reason
+        assert "in house marketing team" in reason  # the trigger is honest

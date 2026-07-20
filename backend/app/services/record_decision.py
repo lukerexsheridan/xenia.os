@@ -36,6 +36,7 @@ from app.domain.dna import (
     ProposalStatus,
 )
 from app.domain.prospect import ProspectStatus
+from app.domain.recommendation import RecommendationPolarity
 from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.dna import SqlDnaRepo
 from app.repositories.jobs import JobQueue
@@ -89,6 +90,16 @@ class RecordDecision:
         recommendation = self._recommendation_repo.get(recommendation_id)
         if recommendation is None:
             raise NotFoundError("recommendation not found in this workspace")
+        if recommendation.polarity is RecommendationPolarity.EXCLUDED:
+            # Disqualifiers are absolute (Doc 02 §7.10): pursuing a ruled-out
+            # business is not a queue decision, it is a change to the law
+            # that ruled it out — and laws change through the DNA, with the
+            # tension surfaced, never silently overridden (Doc 04 §4).
+            raise XeniaError(
+                "this business was ruled out under your disqualifier — to pursue "
+                "it, change the law on your DNA page; I won't cross a hard line "
+                "quietly"
+            )
         if self._teaching_repo.decision_for(recommendation_id) is not None:
             raise ConflictError("this recommendation is already resolved by a decision")
         if chip is not None and kind is not DecisionKind.DECLINE:

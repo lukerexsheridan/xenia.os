@@ -99,18 +99,28 @@ def next_question(answers: dict[str, str]) -> InterviewQuestion | None:
     return None
 
 
+def question_by_key(key: str) -> InterviewQuestion | None:
+    return next((question for question in INTERVIEW_SCRIPT if question.key == key), None)
+
+
 def record_answer(answers: dict[str, str], *, key: str, text: str) -> dict[str, str]:
+    """New answers arrive in order; answered questions may be amended freely
+    while the interview is open — the log begins where meaning begins
+    (Doc 13 I6): nothing is founded until the final answer, so an amendment
+    is an edit, not a revision of history."""
     expected = next_question(answers)
     if expected is None:
         raise DomainRuleViolation("the interview is already complete")
-    if key != expected.key:
+    amending = key in answers
+    question = question_by_key(key) if amending else expected
+    if question is None or (not amending and key != expected.key):
         raise DomainRuleViolation(
             f"the conversation is at {expected.key!r}, not {key!r} — answers "
             "arrive in order so the transcript reads as one conversation"
         )
     if not text.strip():
         raise DomainRuleViolation("an empty answer teaches nothing — say it in your words")
-    if expected.one_per_line:
+    if question.one_per_line:
         lines = [line for line in text.splitlines() if line.strip()]
         if len(lines) > MAX_ELEMENTS_PER_ANSWER:
             raise DomainRuleViolation(

@@ -27,6 +27,7 @@ from app.repositories.prospects import SqlProspectRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo
 from app.services.authenticate_user import AuthenticatedContext
 from app.services.documents import RenderBriefPdf, RenderDnaDocument
+from app.services.revert_dna_change import RevertDnaChange
 
 router = APIRouter()
 
@@ -43,10 +44,14 @@ class DnaElementResponse(BaseModel):
 
 
 class ChangelogEntryResponse(BaseModel):
+    event_id: UUID
     cause: str
     author: str
     element_statement: str | None
     occurred_at: str
+    # Revert is offered only where it can succeed: a before-state exists and
+    # the element is still present (Doc 13 I6 — revert-with-log, not erasure).
+    reversible: bool
 
 
 class ProposalSummaryResponse(BaseModel):
@@ -87,6 +92,7 @@ def get_dna(session: SessionDep, context: ContextDep) -> DnaResponse:
         ],
         changelog=[
             ChangelogEntryResponse(
+                event_id=event.id,
                 cause=event.cause.value,
                 author=event.author.value,
                 element_statement=(
@@ -97,6 +103,10 @@ def get_dna(session: SessionDep, context: ContextDep) -> DnaResponse:
                     else None
                 ),
                 occurred_at=event.occurred_at.isoformat(),
+                reversible=(
+                    event.before is not None
+                    and any(element.id == event.element_id for element in dna.elements)
+                ),
             )
             for event in repo.changelog(dna.id)
         ],
@@ -122,6 +132,15 @@ def endorse_dna(session: SessionDep, context: ContextDep) -> DnaResponse:
         raise NotFoundError("no DNA yet — the interview founds it")
     evolved, event = dna.endorse(now=datetime.now(UTC))
     repo.save(evolved, (event,))
+    return get_dna(session, context)
+
+
+@router.post("/dna/changelog/{event_id}/revert")
+def revert_dna_change(event_id: UUID, session: SessionDep, context: ContextDep) -> DnaResponse:
+    """Restore a change's before-state via a new logged event — the DNA
+    remembers being corrected and remembers being un-corrected (Doc 04 §4;
+    Doc 13 I6)."""
+    RevertDnaChange(SqlDnaRepo(session, context.workspace.id)).execute(event_id=event_id)
     return get_dna(session, context)
 
 

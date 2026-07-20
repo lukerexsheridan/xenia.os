@@ -250,6 +250,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dna/changelog/{event_id}/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revert Dna Change
+         * @description Restore a change's before-state via a new logged event — the DNA
+         *     remembers being corrected and remembers being un-corrected (Doc 04 §4;
+         *     Doc 13 I6).
+         */
+        post: operations["revert_dna_change_v1_dna_changelog__event_id__revert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/dna/document.pdf": {
         parameters: {
             query?: never;
@@ -360,6 +382,17 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** AnsweredQuestionResponse */
+        AnsweredQuestionResponse: {
+            /** Question Key */
+            question_key: string;
+            /** Prompt */
+            prompt: string;
+            /** Text */
+            text: string;
+            /** One Per Line */
+            one_per_line: boolean;
+        };
         /** BillingResponse */
         BillingResponse: {
             /** Subscription Status */
@@ -382,6 +415,11 @@ export interface components {
         };
         /** ChangelogEntryResponse */
         ChangelogEntryResponse: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
             /** Cause */
             cause: string;
             /** Author */
@@ -390,6 +428,8 @@ export interface components {
             element_statement: string | null;
             /** Occurred At */
             occurred_at: string;
+            /** Reversible */
+            reversible: boolean;
         };
         /** CorrectionRequest */
         CorrectionRequest: {
@@ -548,6 +588,8 @@ export interface components {
             completed: boolean;
             /** Dna Created */
             dna_created: boolean;
+            /** Transcript */
+            transcript: components["schemas"]["AnsweredQuestionResponse"][];
         };
         /** MeResponse */
         MeResponse: {
@@ -1090,6 +1132,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DnaResponse"];
+                };
+            };
+        };
+    };
+    revert_dna_change_v1_dna_changelog__event_id__revert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DnaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

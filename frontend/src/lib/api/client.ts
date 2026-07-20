@@ -117,6 +117,12 @@ export const api = {
 
   endorseDna: () => request<DnaResponse>("/v1/dna/endorse", { method: "POST", body: "{}" }),
 
+  revertDnaChange: (eventId: string) =>
+    request<DnaResponse>(`/v1/dna/changelog/${eventId}/revert`, {
+      method: "POST",
+      body: "{}",
+    }),
+
   decideProposal: (proposalId: string, endorse: boolean) =>
     request<ProposalSummary>(`/v1/dna/proposals/${proposalId}/decision`, {
       method: "POST",

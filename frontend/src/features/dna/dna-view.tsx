@@ -9,6 +9,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TextSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api/client";
 
@@ -38,6 +40,16 @@ export function DnaView() {
     },
     onError: (error) => setEffect(error.message),
   });
+  const revert = useMutation({
+    mutationFn: (eventId: string) => api.revertDnaChange(eventId),
+    onMutate: () => setEffect("Restoring — the change stays in the log…"),
+    onSuccess: () => {
+      setEffect("Restored — logged as a new change; nothing is erased.");
+      void queryClient.invalidateQueries({ queryKey: ["dna"] });
+      void queryClient.invalidateQueries({ queryKey: ["queue"] });
+    },
+    onError: (error) => setEffect(error.message),
+  });
   const decideProposal = useMutation({
     mutationFn: ({ id, approve }: { id: string; approve: boolean }) =>
       api.decideProposal(id, approve),
@@ -52,9 +64,10 @@ export function DnaView() {
     );
   if (dna.isError)
     return (
-      <p className="text-ink-muted max-w-prose text-sm leading-relaxed">
-        No DNA yet — the interview founds it. Head to the interview when you have ten minutes.
-      </p>
+      <EmptyState title="No DNA yet — the interview founds it.">
+        Ten minutes of your words become the model everything else runs on. Head to the interview
+        when you have them.
+      </EmptyState>
     );
 
   const data = dna.data;
@@ -78,13 +91,9 @@ export function DnaView() {
             This is my model of who you sell to, in your words. Read it; when it&apos;s right,
             endorse it and it becomes our shared agreement.
           </p>
-          <button
-            data-testid="endorse"
-            className="transition-settle rounded-control bg-accent text-accent-ink mt-2.5 px-3 py-1.5 text-sm font-medium hover:opacity-90"
-            onClick={() => endorse.mutate()}
-          >
+          <Button data-testid="endorse" className="mt-2.5" onClick={() => endorse.mutate()}>
             Endorse this DNA
-          </button>
+          </Button>
         </div>
       )}
       {data.endorsed && (
@@ -159,11 +168,23 @@ export function DnaView() {
           {data.changelog
             .slice(-10)
             .reverse()
-            .map((entry, index) => (
-              <li key={index}>
-                {entry.occurred_at.slice(0, 10)} — {entry.cause.replaceAll("_", " ")} by{" "}
-                {entry.author}
-                {entry.element_statement ? `: ${entry.element_statement}` : ""}
+            .map((entry) => (
+              <li key={entry.event_id} className="flex items-baseline justify-between gap-3">
+                <span>
+                  {entry.occurred_at.slice(0, 10)} — {entry.cause.replaceAll("_", " ")} by{" "}
+                  {entry.author}
+                  {entry.element_statement ? `: ${entry.element_statement}` : ""}
+                </span>
+                {entry.reversible && (
+                  <button
+                    data-testid={`revert-${entry.event_id}`}
+                    className="transition-settle text-accent shrink-0 hover:underline"
+                    aria-label={`revert this change: ${entry.element_statement ?? entry.cause}`}
+                    onClick={() => revert.mutate(entry.event_id)}
+                  >
+                    revert
+                  </button>
+                )}
               </li>
             ))}
         </ul>

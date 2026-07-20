@@ -33,6 +33,7 @@ class InterviewState:
     total: int
     completed: bool
     dna_created: bool
+    answers: dict[str, str]
 
 
 class RunInterview:
@@ -55,6 +56,7 @@ class RunInterview:
             total=len(INTERVIEW_SCRIPT),
             completed=question is None,
             dna_created=self._dna_repo.get() is not None,
+            answers=answers,
         )
 
     def answer(

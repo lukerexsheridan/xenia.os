@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_authenticated_context, get_db_session
 from app.core.logging import current_request_id
+from app.domain.interview import INTERVIEW_SCRIPT
 from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.dna import SqlDnaRepo
 from app.repositories.interview import SqlInterviewRepo
@@ -34,6 +35,13 @@ def _service(session: Session, workspace_id: UUID) -> RunInterview:
     )
 
 
+class AnsweredQuestionResponse(BaseModel):
+    question_key: str
+    prompt: str
+    text: str
+    one_per_line: bool
+
+
 class InterviewStateResponse(BaseModel):
     question_key: str | None
     prompt: str | None
@@ -42,6 +50,9 @@ class InterviewStateResponse(BaseModel):
     total: int
     completed: bool
     dna_created: bool
+    # The transcript so far: amendable in place while the interview is open
+    # (Doc 13 I6 — the log begins where meaning begins).
+    transcript: list[AnsweredQuestionResponse]
 
 
 def _state_response(state: InterviewState) -> InterviewStateResponse:
@@ -53,6 +64,16 @@ def _state_response(state: InterviewState) -> InterviewStateResponse:
         total=state.total,
         completed=state.completed,
         dna_created=state.dna_created,
+        transcript=[
+            AnsweredQuestionResponse(
+                question_key=question.key,
+                prompt=question.prompt,
+                text=state.answers[question.key],
+                one_per_line=question.one_per_line,
+            )
+            for question in INTERVIEW_SCRIPT
+            if question.key in state.answers
+        ],
     )
 
 

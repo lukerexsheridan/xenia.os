@@ -244,6 +244,22 @@ Wait for approval before pushing.
 
 ---
 
+# Pre-Commit Checklist
+
+Before creating a commit, verify:
+
+- The implementation matches the constitutional documents.
+- No future Epic functionality has been introduced.
+- Tests are green.
+- Static analysis is clean.
+- Documentation is up to date.
+- The repository is in a deployable state.
+- The commit represents one logical unit of work.
+
+If any item fails, fix it before committing.
+
+---
+
 # Documentation
 
 Keep documentation synchronised with the implementation.

@@ -9,6 +9,10 @@ the confirmed Release-Blocking and High items were fixed, the rest recorded
 in DEBT.md. Highlights:
 
 ### Fixed
+- **Architecture:** the AP2 layers contract had been broken since Epic 9
+  (`repositories` importing `evaluation`) and masked locally by piped
+  lint-imports output; the golden-set shape and its membership law moved to
+  the domain, restoring both contracts.
 - **Tenancy:** worker jobs now attach their workspace RLS context; Monday
   assembly fans out one idempotent job per workspace (blast radius);
   one composition root for assembly (`build_assemble_queue`).

@@ -29,10 +29,10 @@ from app.core.logging import current_request_id
 from app.domain.confidence import ConfidenceBand, band_for
 from app.domain.dna import DecayClass, DnaCategory, ElementOrigin
 from app.domain.evidence import EvidenceType, FreshnessClass
+from app.domain.golden_set import GoldenSetEntry
 from app.domain.research_brief import BriefSection, BriefSectionCode, completeness_problems
 from app.domain.rubric import RubricDimension, RubricScore
 from app.domain.signal import Signal
-from app.evaluation.golden import GoldenSetEntry
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.sources.http_transport import HttpxTransport
 from app.integrations.sources.politeness import PolitenessEngine

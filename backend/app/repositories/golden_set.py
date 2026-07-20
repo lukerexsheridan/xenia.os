@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from app.evaluation.golden import GoldenSetEntry, require_approved
+from app.domain.golden_set import GoldenSetEntry, require_approved
 from app.repositories.base import WorkspaceScopedRepository
 from app.repositories.orm import GoldenSetEntryRow, ResearchBriefRow
 

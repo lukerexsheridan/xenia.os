@@ -1,11 +1,15 @@
 """The golden set — curated exemplar briefs for regression (Doc 04 §6).
 
+Domain, not evaluation machinery: the entry is an ontology object and its
+membership law (approved work only) is a citable rule enforced at the
+write. The evaluation package remains the home for harness *machinery*,
+which imports this shape from below like every other layer (AP2).
+
 Golden entries are the evaluation harness's ground truth: briefs the Editor
 has judged exemplary, frozen with a note on why. The membership rule is the
 module's one law: only an approved (FINAL) brief may enter — an exemplar
 that never passed the gate would calibrate the harness against unapproved
-work. Evaluation objects observe the customer's world without entering it
-(Doc 08 §5): an entry references a brief, it never copies or alters one.
+work. An entry references a brief, it never copies or alters one.
 """
 
 from dataclasses import dataclass

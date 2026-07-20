@@ -1,0 +1,71 @@
+# Local development stack (Doc 10, Sprint 1): api, worker, postgres, bucket emulator.
+# The whole system runs on one laptop with `docker compose up` (AP8).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: xenia
+      POSTGRES_PASSWORD: xenia
+      POSTGRES_DB: xenia
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xenia -d xenia"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: xenia
+      MINIO_ROOT_PASSWORD: xenia-local-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://xenia:xenia@db:5432/xenia
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/srv/app/app
+      - ./backend/migrations:/srv/app/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  # Same image, second entrypoint (Doc 08 §2: one repo, one image, two entrypoints).
+  worker:
+    build: ./backend
+    command: python -m app.workers.main
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://xenia:xenia@db:5432/xenia
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+    volumes:
+      - ./backend/app:/srv/app/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  minio-data:

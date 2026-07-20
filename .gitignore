@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+!.env.example
+!frontend/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+htmlcov/
+.coverage
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/openapi.json
+
+# Editors / OS / local tool settings
+.claude/settings.local.json
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local data
+postgres-data/
+minio-data/

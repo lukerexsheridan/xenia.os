@@ -1,0 +1,12 @@
+# Railway service configuration (Doc 08 §2).
+# Two services build from this same directory/image:
+#   - api:    startCommand below (default)
+#   - worker: override startCommand to `python -m app.workers.main`
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/v1/health"
+restartPolicyType = "on_failure"

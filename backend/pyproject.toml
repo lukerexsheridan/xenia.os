@@ -1,0 +1,113 @@
+[project]
+name = "xenia-backend"
+version = "0.1.0"
+description = "Xenia backend — FastAPI modular monolith (API + worker)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic-settings>=2.6",
+    "sqlalchemy>=2.0",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "httpx>=0.28",
+    "import-linter>=2.1",
+]
+
+# ── Ruff ─────────────────────────────────────────────────────────────────────
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "SIM", # simplify
+    "C4",  # comprehensions
+    "RUF", # ruff-specific
+    "PL",  # pylint subset
+    "PTH", # prefer pathlib
+]
+ignore = [
+    "PLR0913", # many-args is a design review question, not a lint
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004"]  # magic values are fine in assertions
+
+# ── mypy ─────────────────────────────────────────────────────────────────────
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+
+# ── pytest ───────────────────────────────────────────────────────────────────
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    # Starlette's TestClient emits this until its httpx2 migration settles;
+    # it is upstream noise, not our code.
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated.*",
+]
+
+# ── import-linter: AP2, the dependency direction as law (Doc 08 §1) ─────────
+
+[tool.importlinter]
+root_packages = ["app"]
+include_external_packages = true
+
+# The domain package imports nothing but itself and the standard library.
+[[tool.importlinter.contracts]]
+name = "Domain is pure (AP2)"
+type = "forbidden"
+source_modules = ["app.domain"]
+forbidden_modules = [
+    "app.api",
+    "app.services",
+    "app.repositories",
+    "app.ai",
+    "app.evaluation",
+    "app.integrations",
+    "app.workers",
+    "app.core",
+    "app.scripts",
+    "fastapi",
+    "sqlalchemy",
+    "alembic",
+    "pydantic",
+    "pydantic_settings",
+    "openai",
+]
+
+# api → services → (repositories | ai | integrations | evaluation) → core → domain.
+# Higher layers may import lower; never the reverse. Siblings are independent.
+# Composition roots (app.main, app.scripts) sit outside the layer law — they
+# wire the application together and may import anything.
+[[tool.importlinter.contracts]]
+name = "Layered architecture (AP2)"
+type = "layers"
+containers = []
+layers = [
+    "app.api | app.workers",
+    "app.services",
+    "app.repositories | app.ai | app.integrations | app.evaluation",
+    "app.core",
+    "app.domain",
+]

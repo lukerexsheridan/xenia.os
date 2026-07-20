@@ -1,0 +1,120 @@
+# CI per Doc 08 §11: ruff + mypy strict, tests, migration lint, OpenAPI export,
+# import-linter (AP2), golden regression when ai/ or prompts/ change (placeholder
+# until pipelines exist), image build. Merge → staging deploys are handled by
+# Railway/Vercel Git integrations watching main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: xenia
+          POSTGRES_PASSWORD: xenia
+          POSTGRES_DB: xenia
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U xenia -d xenia"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://xenia:xenia@localhost:5432/xenia
+      ENVIRONMENT: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+      - name: Types (mypy --strict)
+        run: uv run mypy app tests
+      - name: Dependency direction (import-linter, AP2)
+        run: uv run lint-imports
+      - name: Tests (pytest)
+        run: uv run pytest
+      - name: Migrations apply cleanly
+        run: uv run alembic upgrade head
+      - name: Migration drift lint (alembic check)
+        run: uv run alembic check
+      - name: Export OpenAPI schema
+        run: uv run python -m app.scripts.export_openapi openapi.json
+      - name: Upload OpenAPI artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-schema
+          path: backend/openapi.json
+
+  # Golden-set regression gate (Doc 04 §6 / Doc 08 §11). Placeholder until AI
+  # pipelines exist: asserts the golden directory's integrity so the wiring is
+  # already CI-enforced when the first pipeline lands.
+  golden-regression:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect ai/ or prompts/ changes
+        id: changed
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^backend/app/ai/'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Golden regression (placeholder gate)
+        if: steps.changed.outputs.run == 'true'
+        run: |
+          test -d backend/tests/golden || (echo "golden set missing" && exit 1)
+          echo "AI code changed — golden regression suite will gate here once pipelines exist (Doc 04 §6)."
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint (eslint)
+        run: npm run lint
+      - name: Format check (prettier)
+        run: npm run format:check
+      - name: Types (tsc --noEmit)
+        run: npm run typecheck
+      - name: Tests (vitest)
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t xenia-backend:ci backend

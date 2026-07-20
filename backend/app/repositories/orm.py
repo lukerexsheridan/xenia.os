@@ -44,6 +44,11 @@ RING_1_TABLES = (
     "research_briefs",
     "edit_log_entries",
     "rubric_scores",
+    "recommendations",
+    "decisions",
+    "corrections",
+    "outcomes",
+    "dna_proposals",
 )
 
 # The shared world model: facts belong to nobody, judgments stay in Ring 1.
@@ -420,3 +425,115 @@ class SourceHealthEventRow(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class RecommendationRow(Base):
+    """The accountable judgment persisted (Doc 08 §5): decomposed score,
+    queue position, week, polarity — exclusions share the table and the
+    audit trail."""
+
+    __tablename__ = "recommendations"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "prospect_id", "week_key"),
+        Index("ix_recommendations_workspace_week", "workspace_id", "week_key"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    prospect_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("prospects.id", ondelete="CASCADE")
+    )
+    week_key: Mapped[str] = mapped_column(String(10))  # e.g. "2026-W30"
+    polarity: Mapped[str] = mapped_column(String(15))  # recommended | excluded
+    rank: Mapped[int | None] = mapped_column(Integer)
+    score_total: Mapped[float] = mapped_column(Float)
+    confidence_band: Mapped[str] = mapped_column(String(10))  # the four words, as data
+    components: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)  # the decomposition
+    rank_reason: Mapped[str | None] = mapped_column(String(500))
+    exclusion_reason: Mapped[str | None] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DecisionRow(Base):
+    """The founder's response — the teaching event (Doc 08 §5)."""
+
+    __tablename__ = "decisions"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    recommendation_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("recommendations.id", ondelete="CASCADE"), unique=True
+    )
+    kind: Mapped[str] = mapped_column(String(10))  # accept | decline | pursue
+    chip: Mapped[str | None] = mapped_column(String(30))  # the Doc 06 §6 taxonomy
+    reason: Mapped[str | None] = mapped_column(String(1000))
+    decided_by: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT")
+    )
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class CorrectionRow(Base):
+    """The highest-intent teaching signal, recorded with its author
+    (Doc 04 §5; Doc 08 §5)."""
+
+    __tablename__ = "corrections"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    target_kind: Mapped[str] = mapped_column(String(20))
+    target_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    reason: Mapped[str | None] = mapped_column(String(1000))
+    effect_summary: Mapped[str] = mapped_column(String(500))  # the named effect, as said
+    corrected_by: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT")
+    )
+    corrected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class OutcomeRow(Base):
+    """Ground truth, append-only, always human-recorded (Doc 03 §7)."""
+
+    __tablename__ = "outcomes"
+    __table_args__ = (Index("ix_outcomes_workspace_prospect", "workspace_id", "prospect_id"),)
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    prospect_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("prospects.id", ondelete="CASCADE")
+    )
+    kind: Mapped[str] = mapped_column(String(15))
+    reason: Mapped[str | None] = mapped_column(String(1000))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    recorded_by: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT")
+    )
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class DnaProposalRow(Base):
+    """A structural change awaiting the customer's signature (Doc 03 §8)."""
+
+    __tablename__ = "dna_proposals"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    dna_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("dnas.id", ondelete="CASCADE")
+    )
+    element: Mapped[dict[str, Any]] = mapped_column(JSONB)  # as it would exist
+    rationale: Mapped[str] = mapped_column(String(1000))  # proposed with reasoning (N4)
+    proposed_by: Mapped[str] = mapped_column(String(20))  # customer | xenia
+    status: Mapped[str] = mapped_column(String(15))  # proposed | endorsed | declined
+    proposed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

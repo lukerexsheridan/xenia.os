@@ -55,6 +55,12 @@ class SqlIdentityRepo:
         ).scalar_one()
         return _to_workspace(row)
 
+    def list_workspace_ids(self) -> list[UUID]:
+        """Every workspace, for global sweeps (the weekly assembly walks all
+        tenants; each tenant's work then runs through workspace-scoped repos)."""
+        rows = self._session.execute(select(WorkspaceRow.id).order_by(WorkspaceRow.id)).all()
+        return [row[0] for row in rows]
+
     def find_workspace(self, workspace_id: UUID) -> Workspace | None:
         row = self._session.execute(
             select(WorkspaceRow).where(WorkspaceRow.id == workspace_id)

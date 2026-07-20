@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, time
 from uuid import uuid4
 
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
 from app.repositories.jobs import Job, JobQueue, JobStatus
@@ -86,7 +86,31 @@ def test_daily_schedule_enqueues_exactly_once_per_day(db: Engine) -> None:
         enqueue_due_schedules(session, now=after_due)
         session.commit()
         counts = JobQueue(session).counts_by_status()
-    assert counts == {"pending": len(SCHEDULES)}
+    due_today = sum(
+        1
+        for schedule in SCHEDULES
+        if schedule.weekday is None or schedule.weekday == after_due.weekday()
+    )
+    assert counts == {"pending": due_today}
+
+
+def test_weekly_schedule_fires_only_on_its_weekday(db: Engine) -> None:
+    from app.workers.schedules import QUEUE_ASSEMBLY_JOB_TYPE
+
+    monday = datetime(2026, 7, 20, 23, 59, tzinfo=UTC)  # a Monday
+    tuesday = datetime(2026, 7, 21, 23, 59, tzinfo=UTC)
+    with Session(db) as session:
+        enqueue_due_schedules(session, now=tuesday)
+        types_tuesday = {
+            job_type for (job_type,) in session.execute(text("SELECT job_type FROM jobs")).all()
+        }
+        enqueue_due_schedules(session, now=monday)
+        session.commit()
+        types_after_monday = {
+            job_type for (job_type,) in session.execute(text("SELECT job_type FROM jobs")).all()
+        }
+    assert QUEUE_ASSEMBLY_JOB_TYPE not in types_tuesday
+    assert QUEUE_ASSEMBLY_JOB_TYPE in types_after_monday
 
 
 def test_schedule_not_due_enqueues_nothing(db: Engine) -> None:

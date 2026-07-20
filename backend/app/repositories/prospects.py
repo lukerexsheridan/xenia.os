@@ -36,3 +36,21 @@ class SqlProspectRepo(WorkspaceScopedRepository):
         if row is None or row.workspace_id != self._workspace_id:
             return None
         return _to_domain(row)
+
+    def list(self) -> list[Prospect]:
+        rows = (
+            self._session.query(ProspectRow)
+            .filter(ProspectRow.workspace_id == self._workspace_id)
+            .order_by(ProspectRow.surfaced_at, ProspectRow.id)
+            .all()
+        )
+        return [_to_domain(row) for row in rows]
+
+    def save_status(self, prospect: Prospect) -> None:
+        """Persist a lifecycle advance; the domain's forward-only rule has
+        already run by the time a Prospect instance carries the new status."""
+        row = self._session.get(ProspectRow, prospect.id)
+        if row is None or row.workspace_id != self._workspace_id:
+            return
+        row.status = prospect.status.name.lower()
+        self._session.flush()

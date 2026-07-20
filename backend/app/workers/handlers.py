@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 from app.ai.pipelines.extract_page_evidence import ExtractPageEvidence
 from app.ai.providers.openai_responses import OpenAIResponsesProvider
 from app.core.config import get_settings
+from app.domain.audit import AuditAction
+from app.domain.prospect import ProspectStatus
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.resend.client import NullEmailSender, ResendClient
 from app.integrations.sources.http_transport import HttpxTransport
@@ -23,12 +25,19 @@ from app.repositories.acquisition import (
     SqlEntityBindingReviewRepo,
     SqlSourceHealthRepo,
 )
+from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.business_records import SqlBusinessRecordRepo
+from app.repositories.dna import SqlDnaRepo
 from app.repositories.evidence import SqlEvidenceRepo
+from app.repositories.identity import SqlIdentityRepo
 from app.repositories.jobs import Job, JobQueue
 from app.repositories.knowledge import SqlKnowledgeRepo
+from app.repositories.prospects import SqlProspectRepo
+from app.repositories.recommendations import SqlRecommendationRepo
 from app.repositories.snapshots import SqlSourceSnapshotRepo
+from app.repositories.teaching import SqlTeachingRepo
 from app.services.acquire_footprint import AcquireFootprint
+from app.services.assemble_queue import AssembleQueue
 from app.services.capture_snapshot import CaptureSnapshot
 from app.services.derive_signals import DeriveSignals
 from app.services.extract_evidence import ExtractEvidence
@@ -36,7 +45,11 @@ from app.services.receive_stripe_webhook import STRIPE_WEBHOOK_JOB_TYPE
 from app.services.research_run import RunResearch
 from app.services.resolve_entity import ResolveEntity
 from app.services.send_heartbeat import EmailSender, SendHeartbeat
-from app.workers.schedules import HEARTBEAT_JOB_TYPE, SIGNAL_DECAY_SWEEP_JOB_TYPE
+from app.workers.schedules import (
+    HEARTBEAT_JOB_TYPE,
+    QUEUE_ASSEMBLY_JOB_TYPE,
+    SIGNAL_DECAY_SWEEP_JOB_TYPE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +85,51 @@ def handle_signal_decay_sweep(session: Session, job: Job) -> None:
     derive = DeriveSignals(SqlEvidenceRepo(session), knowledge_repo)
     for business_record_id in knowledge_repo.businesses_with_signals():
         derive.execute(business_record_id)
+
+
+def handle_assemble_queues(session: Session, job: Job) -> None:
+    """Monday's queues for every workspace (Doc 03 §5): deterministic
+    scoring against each tenant's DNA, through workspace-scoped repos."""
+    for workspace_id in SqlIdentityRepo(session).list_workspace_ids():
+        result = AssembleQueue(
+            SqlDnaRepo(session, workspace_id),
+            SqlProspectRepo(session, workspace_id),
+            SqlBusinessRecordRepo(session),
+            SqlKnowledgeRepo(session),
+            SqlRecommendationRepo(session, workspace_id),
+            SqlAuditEntryRepo(session, workspace_id),
+        ).execute(workspace_id=workspace_id)
+        logger.info(
+            "queue assembled: workspace=%s week=%s recommended=%d excluded=%d",
+            workspace_id,
+            result.week_key,
+            result.recommended,
+            result.excluded,
+        )
+
+
+OUTCOME_PROMPT_JOB_TYPE = "outcome_prompt"
+
+
+def handle_outcome_prompt(session: Session, job: Job) -> None:
+    """The scheduled nudge for ground truth (Doc 03 §7: Xenia prompts,
+    never assumes). If the prospect is still pursued and no outcome has
+    arrived, the prompt is recorded as an auditable act; the surface that
+    renders it (the weekly brief) belongs to the delivery epics."""
+    workspace_id = UUID(str(job.payload["workspace_id"]))
+    prospect_id = UUID(str(job.payload["prospect_id"]))
+    prospect = SqlProspectRepo(session, workspace_id).get(prospect_id)
+    if prospect is None or prospect.status is not ProspectStatus.PURSUED:
+        return
+    if SqlTeachingRepo(session, workspace_id).outcomes_for_prospect(prospect_id):
+        return
+    SqlAuditEntryRepo(session, workspace_id).append(
+        action=AuditAction.OUTCOME_PROMPTED,
+        target_type="prospect",
+        target_id=str(prospect_id),
+        actor_user_id=None,
+        request_id=None,
+    )
 
 
 RESEARCH_RUN_JOB_TYPE = "research_run"
@@ -138,5 +196,7 @@ JOB_HANDLERS: dict[str, JobHandler] = {
     HEARTBEAT_JOB_TYPE: handle_send_heartbeat_email,
     STRIPE_WEBHOOK_JOB_TYPE: handle_stripe_webhook,
     SIGNAL_DECAY_SWEEP_JOB_TYPE: handle_signal_decay_sweep,
+    QUEUE_ASSEMBLY_JOB_TYPE: handle_assemble_queues,
+    OUTCOME_PROMPT_JOB_TYPE: handle_outcome_prompt,
     RESEARCH_RUN_JOB_TYPE: handle_research_run,
 }

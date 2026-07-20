@@ -15,12 +15,15 @@ from app.repositories.jobs import JobQueue
 
 HEARTBEAT_JOB_TYPE = "send_heartbeat_email"
 SIGNAL_DECAY_SWEEP_JOB_TYPE = "signal_decay_sweep"
+QUEUE_ASSEMBLY_JOB_TYPE = "assemble_queues"
 
 
 @dataclass(frozen=True)
 class DailySchedule:
     job_type: str
     at_utc: time
+    # None -> every day; 0-6 -> only that ISO weekday (0 = Monday).
+    weekday: int | None = None
 
 
 SCHEDULES: tuple[DailySchedule, ...] = (
@@ -28,6 +31,9 @@ SCHEDULES: tuple[DailySchedule, ...] = (
     DailySchedule(job_type=HEARTBEAT_JOB_TYPE, at_utc=time(6, 0)),
     # The freshness economy's clock (Doc 09 §7): stale signals demote daily.
     DailySchedule(job_type=SIGNAL_DECAY_SWEEP_JOB_TYPE, at_utc=time(5, 0)),
+    # Monday's queues, assembled before anyone's Monday starts (Doc 03 §5).
+    # Runs after the decay sweep so ranking sees post-decay confidences.
+    DailySchedule(job_type=QUEUE_ASSEMBLY_JOB_TYPE, at_utc=time(5, 45), weekday=0),
 )
 
 
@@ -35,6 +41,8 @@ def enqueue_due_schedules(session: Session, *, now: datetime | None = None) -> N
     current = now or datetime.now(UTC)
     queue = JobQueue(session)
     for schedule in SCHEDULES:
+        if schedule.weekday is not None and current.weekday() != schedule.weekday:
+            continue
         due_at = datetime.combine(current.date(), schedule.at_utc, tzinfo=UTC)
         if current >= due_at:
             queue.enqueue(

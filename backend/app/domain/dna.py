@@ -97,6 +97,13 @@ MINIMUM_PATTERN_OCCURRENCES = 3
 DECAY_RETENTION = 0.9
 REINFORCEMENT_RATE = 0.2
 
+# [calibrates] — a newly learned preference starts modestly above neutral
+# (it moved on a pattern, not a proof), and a score-factor correction
+# ("this overweights size") demotes an element's weight by half its distance
+# from neutral — a firm step, reversible like everything else.
+LEARNED_INITIAL_CONFIDENCE = 0.6
+DEMOTION_RATE = 0.5
+
 _MATERIAL_CONFIDENCE_DELTA = 1e-9
 
 
@@ -436,6 +443,36 @@ class Dna:
             )
         evolved = replace(self, version=version, elements=tuple(elements))
         return evolved, tuple(events)
+
+    def demote_element(self, element_id: UUID, *, now: datetime) -> tuple["Dna", DnaChangeEvent]:
+        """A score-factor correction (Doc 04 §5: 'this score overweights
+        size'): the element's weight steps toward neutral, immediately and
+        customer-authored — the element itself stays, because the customer
+        questioned its weight, not its truth."""
+        before = self.element(element_id)
+        lowered = NEUTRAL_CONFIDENCE + (before.confidence - NEUTRAL_CONFIDENCE) * DEMOTION_RATE
+        after = replace(before, confidence=lowered)
+        return self._replace_element(
+            before, after, cause=ChangeCause.CORRECTION, author=ChangeAuthor.CUSTOMER, now=now
+        )
+
+    def withdraw_element(self, element_id: UUID, *, now: datetime) -> tuple["Dna", DnaChangeEvent]:
+        """The correction path (Doc 06 §6): the customer says an element is
+        wrong and it goes, immediately and without argument — the customer is
+        sovereign over their own strategy (Doc 04 §4). Customer-authored,
+        cause CORRECTION, and the withdrawn element stays in the log with its
+        full before-state (an employee remembers being corrected)."""
+        before = self.element(element_id)
+        elements = tuple(candidate for candidate in self.elements if candidate.id != element_id)
+        evolved = replace(self, version=self.version + 1, elements=elements)
+        return evolved, self._event(
+            element_id=element_id,
+            cause=ChangeCause.CORRECTION,
+            author=ChangeAuthor.CUSTOMER,
+            before=before,
+            after=None,
+            now=now,
+        )
 
     def revert(self, event: DnaChangeEvent, *, now: datetime) -> tuple["Dna", DnaChangeEvent]:
         """Revert restores the event's before-state via a *new* event — the

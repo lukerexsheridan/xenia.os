@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–7 complete; Epic 8 not started.** Epic 1: the load-bearing core —
+**Epics 0–8 complete; Epic 9 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -492,7 +492,22 @@ remains the only exit, the rubric ship bar in `app/domain/rubric.py`
 the QA-delta dial (`quality_report`: unedited-pass = ship-bar pass AND zero
 edit-log entries), and the CI golden-regression job now genuinely runs
 `pytest tests/ai` when `backend/app/ai/` changes.
-Recommendations, decisions, and learning belong to Epic 8.
+Epic 8: the loop's back half — deterministic DNA-x-signals scoring decomposed
+per element (`app/domain/recommendation.py`; disqualifier exclusion runs
+before ranking exists and `excluded_by_disqualifier` takes no score,
+structurally), the bounded weekly queue (capacity 10, never padded, visible
+exclusion at the end, rank reasons as data), the ratified Doc 06 chip
+taxonomy (`app/domain/decision.py`: pattern chips generalise at the
+3-occurrence threshold, the structural chip raises a DnaProposal for
+endorsement, we-know-them/evidence-wrong teach nothing), corrections applied
+synchronously with the named effect (a deterministic queue diff), WON
+outcomes reinforcing exactly the elements in the stored decomposition,
+`/v1` loop endpoints (queue/decision/corrections/outcomes/proposals), the
+Monday assembly job + 14-day outcome prompt, and migration 0006 (five Ring-1
+tables; decisions/corrections/outcomes have no UPDATE/DELETE policies at
+all — append-only by absence).
+The Editor console UI, grading queue, and golden-set management belong to
+Epic 9.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

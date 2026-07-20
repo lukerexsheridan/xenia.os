@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–7 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–8 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -35,7 +35,13 @@ this codebase implements them and any deviation requires an ADR
 > (citation binding, structure, banned vocabulary, false precision, entity
 > consistency), machine briefs stored as DRAFTs with full derivation behind the
 > Editor gate, the rubric ship bar (≥16/20, no dimension <2, accuracy-0 zeroes),
-> and the QA-delta dial. Epic 8 (recommendations + decisions) is next.
+> and the QA-delta dial. Epic 8: the recommendation engine — deterministic
+> decomposed scoring (every point names a DNA element, a signal, and its
+> evidence), the bounded weekly queue with visible exclusions and rank
+> reasons, the ten-second teaching loop (chips, synchronous corrections with
+> named effects, proposals for structural changes), outcome capture with
+> win-reinforcement, and the Monday assembly job. Epic 9 (Editor console) is
+> next.
 
 ## Stack
 

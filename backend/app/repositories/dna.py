@@ -20,10 +20,12 @@ from app.domain.dna import (
     DnaCategory,
     DnaChangeEvent,
     DnaElement,
+    DnaProposal,
     ElementOrigin,
+    ProposalStatus,
 )
 from app.repositories.base import WorkspaceScopedRepository
-from app.repositories.orm import DnaChangeEventRow, DnaRow
+from app.repositories.orm import DnaChangeEventRow, DnaProposalRow, DnaRow
 
 
 def element_to_json(element: DnaElement) -> dict[str, Any]:
@@ -130,3 +132,63 @@ class SqlDnaRepo(WorkspaceScopedRepository):
             )
             for row in rows
         ]
+
+    def add_proposal(self, proposal: DnaProposal) -> None:
+        self._session.add(
+            DnaProposalRow(
+                id=proposal.id,
+                workspace_id=self._workspace_id,
+                dna_id=proposal.dna_id,
+                element=element_to_json(proposal.element),
+                rationale=proposal.rationale,
+                proposed_by=proposal.proposed_by.value,
+                status=proposal.status.value,
+                proposed_at=proposal.proposed_at,
+                decided_at=proposal.decided_at,
+            )
+        )
+        self._session.flush()
+
+    def get_proposal(self, proposal_id: UUID) -> DnaProposal | None:
+        row = self._session.get(DnaProposalRow, proposal_id)
+        if row is None or row.workspace_id != self._workspace_id:
+            return None
+        return _proposal_to_domain(row)
+
+    def list_proposals(self, *, status: ProposalStatus | None = None) -> list[DnaProposal]:
+        query = select(DnaProposalRow).where(DnaProposalRow.workspace_id == self._workspace_id)
+        if status is not None:
+            query = query.where(DnaProposalRow.status == status.value)
+        rows = (
+            self._session.execute(query.order_by(DnaProposalRow.proposed_at, DnaProposalRow.id))
+            .scalars()
+            .all()
+        )
+        return [_proposal_to_domain(row) for row in rows]
+
+    def open_proposal_exists_for_statement(self, statement: str) -> bool:
+        """Idempotence for pattern-born proposals: the same lesson is
+        proposed once, not on every occurrence past the threshold."""
+        rows = self.list_proposals(status=ProposalStatus.PROPOSED)
+        return any(row.element.statement == statement for row in rows)
+
+    def save_proposal_decision(self, proposal: DnaProposal) -> None:
+        row = self._session.get(DnaProposalRow, proposal.id)
+        if row is None or row.workspace_id != self._workspace_id:
+            return
+        row.status = proposal.status.value
+        row.decided_at = proposal.decided_at
+        self._session.flush()
+
+
+def _proposal_to_domain(row: DnaProposalRow) -> DnaProposal:
+    return DnaProposal(
+        id=row.id,
+        dna_id=row.dna_id,
+        element=element_from_json(row.element),
+        rationale=row.rationale,
+        proposed_by=ChangeAuthor(row.proposed_by),
+        status=ProposalStatus(row.status),
+        proposed_at=row.proposed_at,
+        decided_at=row.decided_at,
+    )

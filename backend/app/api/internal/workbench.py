@@ -48,9 +48,11 @@ from app.repositories.evidence import SqlEvidenceRepo
 from app.repositories.identity import SqlIdentityRepo
 from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
+from app.repositories.recommendations import SqlRecommendationRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo, StoredResearchBrief
 from app.repositories.snapshots import SqlSourceSnapshotRepo
 from app.services.acquire_footprint import AcquireFootprint
+from app.services.assemble_queue import AssembleQueue
 from app.services.author_research_brief import (
     CreateResearchBrief,
     FinaliseResearchBrief,
@@ -763,3 +765,26 @@ def record_rubric_score(
 def quality_report(workspace_id: UUID, session: WorkspaceSessionDep) -> dict[str, float | int]:
     """The QA-delta dial (Doc 10, Sprint 13): the unedited-pass rate."""
     return SqlResearchBriefRepo(session, workspace_id).quality_report()
+
+
+class AssemblyResponse(BaseModel):
+    week_key: str
+    recommended: int
+    excluded: int
+
+
+@router.post("/workspaces/{workspace_id}/assemble-queue")
+def assemble_queue_now(workspace_id: UUID, session: WorkspaceSessionDep) -> AssemblyResponse:
+    """Assemble this workspace's week on demand (Doc 10, Sprint 14's staging
+    deploy); the Monday job runs the identical service."""
+    result = AssembleQueue(
+        SqlDnaRepo(session, workspace_id),
+        SqlProspectRepo(session, workspace_id),
+        SqlBusinessRecordRepo(session),
+        SqlKnowledgeRepo(session),
+        SqlRecommendationRepo(session, workspace_id),
+        SqlAuditEntryRepo(session, workspace_id),
+    ).execute(workspace_id=workspace_id)
+    return AssemblyResponse(
+        week_key=result.week_key, recommended=result.recommended, excluded=result.excluded
+    )

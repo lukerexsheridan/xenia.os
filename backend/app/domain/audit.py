@@ -25,6 +25,13 @@ class AuditAction(StrEnum):
     DNA_CREATED = "dna.created"
     RESEARCH_BRIEF_CREATED = "research_brief.created"
     RESEARCH_BRIEF_FINALISED = "research_brief.finalised"
+    # Epic 8 — the loop's back half (Doc 08 §4): every teaching event and
+    # every queue assembly is an auditable act.
+    QUEUE_ASSEMBLED = "queue.assembled"
+    DECISION_RECORDED = "decision.recorded"
+    CORRECTION_APPLIED = "correction.applied"
+    OUTCOME_RECORDED = "outcome.recorded"
+    OUTCOME_PROMPTED = "outcome.prompted"
 
 
 @dataclass(frozen=True)

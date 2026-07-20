@@ -80,5 +80,11 @@ def edit_draft(
 ) -> DraftResponse:
     """Always-editable: the founder's edit is the final word (and a voice
     signal for later — recorded by the save, judged by nobody)."""
-    SqlDraftRepo(session, context.workspace.id).save(prospect_id, request.body)
+    workspace_id = context.workspace.id
+    # Tenancy: a draft may only ever reference the caller's own prospect —
+    # without this check, a foreign prospect UUID could be squatted via the
+    # global unique constraint (a cross-tenant write and a denial of service).
+    if SqlProspectRepo(session, workspace_id).get(prospect_id) is None:
+        raise NotFoundError("prospect not found in this workspace")
+    SqlDraftRepo(session, workspace_id).save(prospect_id, request.body)
     return DraftResponse(body=request.body, problems=[])

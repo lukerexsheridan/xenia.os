@@ -25,6 +25,11 @@ from app.domain.rules import DomainRuleViolation
 
 INTERVIEW_STATEMENT_CONFIDENCE = 0.8  # [calibrates]
 
+# [calibrates] — a one-per-line answer mints one element per line; a bound
+# keeps a paste-accident from flooding the founding DNA with hundreds of
+# laws (each becomes constitutional and needs a correction to remove).
+MAX_ELEMENTS_PER_ANSWER = 20
+
 
 @dataclass(frozen=True)
 class InterviewQuestion:
@@ -105,6 +110,13 @@ def record_answer(answers: dict[str, str], *, key: str, text: str) -> dict[str, 
         )
     if not text.strip():
         raise DomainRuleViolation("an empty answer teaches nothing — say it in your words")
+    if expected.one_per_line:
+        lines = [line for line in text.splitlines() if line.strip()]
+        if len(lines) > MAX_ELEMENTS_PER_ANSWER:
+            raise DomainRuleViolation(
+                f"that's {len(lines)} lines — keep it to the {MAX_ELEMENTS_PER_ANSWER} "
+                "hard lines that truly never bend; the rest can be taught later"
+            )
     return {**answers, key: text.strip()}
 
 

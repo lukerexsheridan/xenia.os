@@ -145,6 +145,13 @@ def export_brief_pdf(prospect_id: UUID, session: SessionDep, context: ContextDep
     return Response(content=pdf, media_type="application/pdf")
 
 
+def _csv_safe(value: str) -> str:
+    """Business names come from crawled external sources; a name beginning
+    with a formula trigger would execute in a spreadsheet. Neutralised with
+    the standard leading-quote escape."""
+    return f"'{value}" if value[:1] in ("=", "+", "-", "@", "\t") else value
+
+
 @router.get("/prospects/export.csv")
 def export_prospects_csv(session: SessionDep, context: ContextDep) -> Response:
     """Lifecycle export: business names and statuses. No contacts exist in
@@ -158,7 +165,7 @@ def export_prospects_csv(session: SessionDep, context: ContextDep) -> Response:
         record = business_repo.get(prospect.business_record_id)
         writer.writerow(
             [
-                record.canonical_name if record else "",
+                _csv_safe(record.canonical_name if record else ""),
                 prospect.status.name.lower(),
                 prospect.surfaced_at.isoformat(),
             ]

@@ -23,6 +23,7 @@ from app.repositories.evidence import SqlEvidenceRepo
 from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo, StoredResearchBrief
+from app.services.ai_budget import enforce_ai_budget
 
 CURRENT_FORMAT_VERSION = 1
 
@@ -67,6 +68,7 @@ class ComposeResearchBrief:
         prospect = self._prospect_repo.get(prospect_id)
         if prospect is None:
             raise NotFoundError("prospect not found in this workspace")
+        enforce_ai_budget(self._knowledge_repo)
         evidence = self._evidence_repo.list_for_business(prospect.business_record_id)
         receipt_table = build_receipt_table(evidence)
         number_to_evidence = {row.number: row.evidence_id for row in receipt_table}

@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     stripe_payment_link_url: str = ""
     stripe_portal_login_url: str = ""
 
+    # The monthly AI token ceiling (Doc 08 §8's cost governor). 0 disables
+    # the governor while the real ceiling is being learned from ledgers.
+    ai_monthly_token_budget: int = 0
+
     # Outbound email (Resend adapter). The heartbeat job emails the founder
     # daily (Doc 10, Sprint 3); an empty recipient skips the send with a log.
     email_from: str = "Xenia <onboarding@resend.dev>"

@@ -11,7 +11,7 @@ all.
 import time
 from datetime import UTC, datetime
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Response
@@ -69,6 +69,7 @@ from app.services.create_prospect import CreateProspect
 from app.services.derive_signals import DeriveSignals
 from app.services.documents import RenderBriefPdf, RenderDnaDocument
 from app.services.extract_evidence import ExtractEvidence
+from app.services.offboard_workspace import OffboardWorkspace
 from app.services.research_run import RunResearch
 from app.services.resolve_binding_review import ResolveBindingReview
 from app.services.resolve_entity import ResolveEntity
@@ -926,4 +927,35 @@ def five_metrics(session: SessionDep) -> FiveMetricsResponse:
         unedited_pass_rate=metrics.unedited_pass_rate,
         capture_rate=metrics.capture_rate,
         tokens_per_brief=metrics.tokens_per_brief,
+    )
+
+
+# ── Epic 12: the departure rule (Doc 10, Sprint 21-22) ───────────────────────
+
+
+@router.get("/workspaces/{workspace_id}/offboarding-export")
+def offboarding_export(workspace_id: UUID, session: WorkspaceSessionDep) -> dict[str, Any]:
+    """Everything that is theirs, in one bundle — the access-request answer
+    and the departure export are the same artefact."""
+    return OffboardWorkspace(session, workspace_id).export()
+
+
+class OffboardRequest(BaseModel):
+    confirm_name: str
+
+
+class DeletionReportResponse(BaseModel):
+    workspace_id: UUID
+    rows_deleted_by_table: dict[str, int]
+
+
+@router.post("/workspaces/{workspace_id}/offboard")
+def offboard_workspace(
+    workspace_id: UUID, body: OffboardRequest, session: WorkspaceSessionDep
+) -> DeletionReportResponse:
+    """Irreversible: export first, then delete. The exact workspace name is
+    the confirmation — deliberate friction for a deliberate act."""
+    report = OffboardWorkspace(session, workspace_id).delete(confirm_name=body.confirm_name)
+    return DeletionReportResponse(
+        workspace_id=report.workspace_id, rows_deleted_by_table=report.rows_deleted_by_table
     )

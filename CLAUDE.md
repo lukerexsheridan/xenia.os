@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–11 complete; Epic 12 not started.** Epic 1: the load-bearing core —
+**Epics 0–11 complete; Epic 12 engineering deliverables complete — V1 sign-off awaits its operational gates.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -551,8 +551,22 @@ workspace subscription_status through the idempotent job queue; migration
 unedited-pass rate, capture rate, tokens per brief — cohort figures iterate
 workspace-scoped repos, never a cross-tenant query) with a console tab, and
 the Sev1 runbook (`docs/runbooks/SEV1.md`).
-Hardening to V1 (sampling narrows, cost governors, offboarding/deletion,
-security pass, remaining runbooks) belongs to Epic 12.
+Epic 12 (the code-shaped half): the departure rule
+(`app/services/offboard_workspace.py`: the full JSON export — DNA + history,
+prospects, approved briefs, teaching, audit trail — then deletion cascading
+from the workspace row with exact-name confirmation; the departure E2E
+proves zero Ring-1 rows survive while Ring-2 world facts remain), the AI
+cost governor (`app/services/ai_budget.py`: AI_MONTHLY_TOKEN_BUDGET over the
+ledger, BudgetExhaustedError = HTTP 429 honest wait, 0 disables), the RLS
+audit script (`python -m app.scripts.rls_audit`: enabled+forced+policies for
+every Ring-1 table and no stray workspace_id columns), and all five runbooks
+(SEV1, QUARANTINE, PROVIDER_OUTAGE, DELETION_REQUEST, ROLLBACK in
+`docs/runbooks/`). Still outstanding for V1 per Doc 10 §9 — founder-side,
+not code: the rehearsals/drills (Sev1 staged incident, backup-restore,
+secrets rotation), the golden set grown to ≥50 with a held-out portion, the
+L2 judge (advisory, allowed to mature), sampling narrowing only as the
+harness earns it, sustained unedited-pass ≥70% x4 weeks, unit cost within
+the ratified ceiling, and the cohort to ~25.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

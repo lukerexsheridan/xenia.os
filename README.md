@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–11 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–12 (engineering) complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -53,7 +53,11 @@ this codebase implements them and any deviation requires an ADR
 > worth saying, sent on the workspace's local Monday), gate-guarded opener
 > drafts (always editable, never sent), Stripe founding billing via payment
 > link + webhook state sync, the five-metric panel, and the Sev1 runbook.
-> Epic 12 (hardening to V1) is next.
+> Epic 12 (code half): the departure rule — full export then cascading
+> deletion, provably gone in the E2E — the AI monthly cost governor, the RLS
+> audit script, and all five runbooks. V1 sign-off (Doc 10 §9) awaits the
+> operational gates: rehearsed drills, the golden set at ≥50, sustained
+> unedited-pass ≥70%, and the founding cohort.
 
 ## Stack
 

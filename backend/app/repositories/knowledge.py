@@ -151,3 +151,12 @@ class SqlKnowledgeRepo:
             if str(pipeline).startswith("compose_brief"):
                 brief_compositions += int(count)
         return {"total_tokens": total_tokens, "brief_compositions": brief_compositions}
+
+    def tokens_since(self, since: datetime) -> int:
+        total = self._session.execute(
+            select(
+                func.coalesce(func.sum(AiCallRecordRow.input_tokens), 0)
+                + func.coalesce(func.sum(AiCallRecordRow.output_tokens), 0)
+            ).where(AiCallRecordRow.occurred_at >= since)
+        ).scalar_one()
+        return int(total)

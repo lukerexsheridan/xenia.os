@@ -18,6 +18,7 @@ from app.repositories.interview import SqlInterviewRepo
 from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo
+from app.services.ai_budget import enforce_ai_budget
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ class ComposeDraft:
     def execute(self, *, prospect_id: UUID) -> DraftResult:
         if self._pipeline is None:
             raise XeniaError("drafting is not configured in this environment")
+        enforce_ai_budget(self._knowledge_repo)
         stored = self._brief_repo.deliverable_for_prospect(prospect_id)
         if stored is None:
             raise NotFoundError(

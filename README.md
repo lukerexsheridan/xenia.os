@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–10 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–11 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -48,8 +48,12 @@ this codebase implements them and any deviation requires an ADR
 > from the customer's own words, the endorsement moment, the weekly queue with
 > verdict-first cards, decline chips and visible exclusions, the brief as a
 > typeset document, ten-second corrections with named effects, outcome capture,
-> PDF/CSV export, and the Playwright loop-walk E2E green in CI. Epic 11 (MVP
-> mode: weekly email, drafts, billing, metrics) is next.
+> PDF/CSV export, and the Playwright loop-walk E2E green in CI. Epic 11: MVP
+> mode — the weekly brief email (golden-tested, silent when there's nothing
+> worth saying, sent on the workspace's local Monday), gate-guarded opener
+> drafts (always editable, never sent), Stripe founding billing via payment
+> link + webhook state sync, the five-metric panel, and the Sev1 runbook.
+> Epic 12 (hardening to V1) is next.
 
 ## Stack
 

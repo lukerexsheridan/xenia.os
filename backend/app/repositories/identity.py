@@ -18,7 +18,13 @@ from app.repositories.orm import UserRow, WorkspaceRow
 
 
 def _to_workspace(row: WorkspaceRow) -> Workspace:
-    return Workspace(id=row.id, name=row.name, created_at=row.created_at)
+    return Workspace(
+        id=row.id,
+        name=row.name,
+        created_at=row.created_at,
+        delivery_timezone=row.delivery_timezone,
+        subscription_status=row.subscription_status,
+    )
 
 
 def _to_user(row: UserRow) -> User:
@@ -54,6 +60,32 @@ class SqlIdentityRepo:
             select(WorkspaceRow).where(WorkspaceRow.id == workspace_id)
         ).scalar_one()
         return _to_workspace(row)
+
+    def workspace_owner_email(self, workspace_id: UUID) -> str | None:
+        """The owner's address — the weekly brief's recipient (Doc 03 C8)."""
+        row = self._session.execute(
+            select(UserRow.email)
+            .where(UserRow.workspace_id == workspace_id, UserRow.role == "owner")
+            .order_by(UserRow.created_at)
+            .limit(1)
+        ).scalar_one_or_none()
+        return row
+
+    def set_billing(
+        self, workspace_id: UUID, *, stripe_customer_id: str | None, status: str
+    ) -> None:
+        row = self._session.get(WorkspaceRow, workspace_id)
+        if row is None:
+            return
+        if stripe_customer_id is not None:
+            row.stripe_customer_id = stripe_customer_id
+        row.subscription_status = status
+        self._session.flush()
+
+    def workspace_id_for_stripe_customer(self, stripe_customer_id: str) -> UUID | None:
+        return self._session.execute(
+            select(WorkspaceRow.id).where(WorkspaceRow.stripe_customer_id == stripe_customer_id)
+        ).scalar_one_or_none()
 
     def list_workspace_ids(self) -> list[UUID]:
         """Every workspace, for global sweeps (the weekly assembly walks all

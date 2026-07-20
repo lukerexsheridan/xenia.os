@@ -51,6 +51,7 @@ RING_1_TABLES = (
     "dna_proposals",
     "golden_set_entries",
     "interview_states",
+    "drafts",
 )
 
 # The shared world model: facts belong to nobody, judgments stay in Ring 1.
@@ -74,6 +75,15 @@ class WorkspaceRow(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(200))
+    # Workspace-local delivery (Doc 10 Sprint 20); UK beachhead default.
+    delivery_timezone: Mapped[str] = mapped_column(
+        String(50), server_default="Europe/London", default="Europe/London"
+    )
+    # Founding billing state, synced from Stripe webhooks (Doc 08 SS2).
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(100))
+    subscription_status: Mapped[str] = mapped_column(
+        String(20), server_default="none", default="none"
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -571,3 +581,20 @@ class InterviewStateRow(Base):
     answers: Mapped[dict[str, Any]] = mapped_column(JSONB)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DraftRow(Base):
+    """C6 opener drafts: always-editable, never sent (Doc 03 SS8)."""
+
+    __tablename__ = "drafts"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    prospect_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("prospects.id", ondelete="CASCADE"), unique=True
+    )
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

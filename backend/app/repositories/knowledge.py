@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domain.signal import Signal, SignalFamily
@@ -131,3 +131,23 @@ class SqlKnowledgeRepo:
             )
         )
         self._session.flush()
+
+    def ai_usage_totals(self) -> dict[str, int]:
+        """Token totals and composition counts from the ledger (Doc 08 SS8):
+        the unit-cost dial's raw numbers, honest tokens rather than guessed
+        prices."""
+        rows = self._session.execute(
+            select(
+                AiCallRecordRow.pipeline,
+                func.count(),
+                func.coalesce(func.sum(AiCallRecordRow.input_tokens), 0),
+                func.coalesce(func.sum(AiCallRecordRow.output_tokens), 0),
+            ).group_by(AiCallRecordRow.pipeline)
+        ).all()
+        total_tokens = 0
+        brief_compositions = 0
+        for pipeline, count, input_tokens, output_tokens in rows:
+            total_tokens += int(input_tokens) + int(output_tokens)
+            if str(pipeline).startswith("compose_brief"):
+                brief_compositions += int(count)
+        return {"total_tokens": total_tokens, "brief_compositions": brief_compositions}

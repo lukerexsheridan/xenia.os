@@ -309,6 +309,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing */
+        get: operations["get_billing_v1_billing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/prospects/{prospect_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Draft */
+        get: operations["get_draft_v1_prospects__prospect_id__draft_get"];
+        /**
+         * Edit Draft
+         * @description Always-editable: the founder's edit is the final word (and a voice
+         *     signal for later — recorded by the save, judged by nobody).
+         */
+        put: operations["edit_draft_v1_prospects__prospect_id__draft_put"];
+        /** Compose Draft */
+        post: operations["compose_draft_v1_prospects__prospect_id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -319,6 +359,15 @@ export interface components {
             question_key: string;
             /** Text */
             text: string;
+        };
+        /** BillingResponse */
+        BillingResponse: {
+            /** Subscription Status */
+            subscription_status: string;
+            /** Payment Link Url */
+            payment_link_url: string | null;
+            /** Portal Url */
+            portal_url: string | null;
         };
         /** BriefSectionResponse */
         BriefSectionResponse: {
@@ -460,6 +509,18 @@ export interface components {
             changelog: components["schemas"]["ChangelogEntryResponse"][];
             /** Proposals */
             proposals: components["schemas"]["ProposalSummaryResponse"][];
+        };
+        /** DraftEditRequest */
+        DraftEditRequest: {
+            /** Body */
+            body: string;
+        };
+        /** DraftResponse */
+        DraftResponse: {
+            /** Body */
+            body: string | null;
+            /** Problems */
+            problems: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1100,6 +1161,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_billing_v1_billing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingResponse"];
+                };
+            };
+        };
+    };
+    get_draft_v1_prospects__prospect_id__draft_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prospect_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_draft_v1_prospects__prospect_id__draft_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prospect_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftEditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compose_draft_v1_prospects__prospect_id__draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prospect_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

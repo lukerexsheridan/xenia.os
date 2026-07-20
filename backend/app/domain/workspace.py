@@ -15,3 +15,7 @@ class Workspace:
     id: UUID
     name: str
     created_at: datetime
+    # Workspace-local delivery (Doc 03 C8): Monday morning *their* time.
+    delivery_timezone: str = "Europe/London"
+    # Founding billing state, synced from Stripe webhooks; never authored here.
+    subscription_status: str = "none"

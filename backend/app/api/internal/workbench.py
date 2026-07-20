@@ -63,6 +63,7 @@ from app.services.author_research_brief import (
 from app.services.capture_evidence import CaptureEvidence
 from app.services.capture_snapshot import CaptureSnapshot
 from app.services.compose_research_brief import ComposeResearchBrief
+from app.services.compute_metrics import ComputeMetrics
 from app.services.create_dna import CreateDna, DnaElementInput
 from app.services.create_prospect import CreateProspect
 from app.services.derive_signals import DeriveSignals
@@ -905,3 +906,24 @@ def list_golden_set(workspace_id: UUID, session: WorkspaceSessionDep) -> list[Go
         )
         for entry in SqlGoldenSetRepo(session, workspace_id).list()
     ]
+
+
+class FiveMetricsResponse(BaseModel):
+    acceptance_rate: float
+    teaching_events: int
+    unedited_pass_rate: float
+    capture_rate: float
+    tokens_per_brief: float
+
+
+@router.get("/metrics")
+def five_metrics(session: SessionDep) -> FiveMetricsResponse:
+    """The five numbers on one page (Doc 10, Sprint 20)."""
+    metrics = ComputeMetrics(session).cohort()
+    return FiveMetricsResponse(
+        acceptance_rate=metrics.acceptance_rate,
+        teaching_events=metrics.teaching_events,
+        unedited_pass_rate=metrics.unedited_pass_rate,
+        capture_rate=metrics.capture_rate,
+        tokens_per_brief=metrics.tokens_per_brief,
+    )

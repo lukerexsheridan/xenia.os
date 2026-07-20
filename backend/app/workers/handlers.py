@@ -7,7 +7,9 @@ job's completion commit together.
 import logging
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
@@ -39,6 +41,7 @@ from app.repositories.teaching import SqlTeachingRepo
 from app.services.acquire_footprint import AcquireFootprint
 from app.services.assemble_queue import AssembleQueue
 from app.services.capture_snapshot import CaptureSnapshot
+from app.services.compose_weekly_brief import SendWeeklyBrief
 from app.services.derive_signals import DeriveSignals
 from app.services.extract_evidence import ExtractEvidence
 from app.services.receive_stripe_webhook import STRIPE_WEBHOOK_JOB_TYPE
@@ -49,6 +52,7 @@ from app.workers.schedules import (
     HEARTBEAT_JOB_TYPE,
     QUEUE_ASSEMBLY_JOB_TYPE,
     SIGNAL_DECAY_SWEEP_JOB_TYPE,
+    WEEKLY_BRIEF_SWEEP_JOB_TYPE,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,12 +72,35 @@ def handle_send_heartbeat_email(session: Session, job: Job) -> None:
 
 
 def handle_stripe_webhook(session: Session, job: Job) -> None:
-    # Billing state sync lands in Epic 11; until then receipt is recorded so
-    # replayed history is processable later. IDs only in logs (Doc 05).
+    """Billing state sync (Doc 10, Sprint 20): checkout binds the customer
+    to the workspace via client_reference_id; subscription events keep the
+    status honest. Unknown event types are received and ignored — additive,
+    never brittle. IDs only in logs (Doc 05)."""
+    identity = SqlIdentityRepo(session)
+    event_type = str(job.payload.get("event_type", ""))
+    data_object = job.payload.get("event", {}).get("data", {}).get("object", {})
+    if event_type == "checkout.session.completed":
+        reference = data_object.get("client_reference_id")
+        customer = data_object.get("customer")
+        if reference and customer:
+            identity.set_billing(
+                UUID(str(reference)), stripe_customer_id=str(customer), status="active"
+            )
+    elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+        customer = data_object.get("customer")
+        if customer:
+            workspace_id = identity.workspace_id_for_stripe_customer(str(customer))
+            if workspace_id is not None:
+                status = (
+                    "canceled"
+                    if event_type.endswith("deleted")
+                    else str(data_object.get("status", "active"))
+                )
+                identity.set_billing(workspace_id, stripe_customer_id=None, status=status)
     logger.info(
-        "stripe webhook received: %s (%s)",
+        "stripe webhook processed: %s (%s)",
         job.payload.get("event_id"),
-        job.payload.get("event_type"),
+        event_type,
     )
 
 
@@ -106,6 +133,46 @@ def handle_assemble_queues(session: Session, job: Job) -> None:
             result.recommended,
             result.excluded,
         )
+
+
+WEEKLY_BRIEF_SEND_JOB_TYPE = "weekly_brief_send"
+
+
+def handle_weekly_brief_sweep(session: Session, job: Job) -> None:
+    """Daily tick: enqueue this week's send for every workspace whose local
+    clock says Monday. The idempotency key makes once-per-week structural."""
+    now = datetime.now(UTC)
+    queue = JobQueue(session)
+    identity = SqlIdentityRepo(session)
+    for workspace_id in identity.list_workspace_ids():
+        workspace = identity.get_workspace(workspace_id)
+        try:
+            local_now = now.astimezone(ZoneInfo(workspace.delivery_timezone))
+        except KeyError:
+            local_now = now  # an unknown timezone falls back to UTC, honestly
+        if local_now.weekday() != 0:
+            continue
+        year, week, _ = local_now.isocalendar()
+        queue.enqueue(
+            WEEKLY_BRIEF_SEND_JOB_TYPE,
+            idempotency_key=f"weekly_brief:{workspace_id}:{year}-W{week:02d}",
+            payload={"workspace_id": str(workspace_id)},
+            workspace_id=workspace_id,
+        )
+
+
+def handle_weekly_brief_send(session: Session, job: Job) -> None:
+    workspace_id = UUID(str(job.payload["workspace_id"]))
+    outcome = SendWeeklyBrief(
+        SqlIdentityRepo(session),
+        SqlRecommendationRepo(session, workspace_id),
+        SqlProspectRepo(session, workspace_id),
+        SqlBusinessRecordRepo(session),
+        SqlDnaRepo(session, workspace_id),
+        SqlTeachingRepo(session, workspace_id),
+        _email_sender(),
+    ).execute(workspace_id=workspace_id)
+    logger.info("weekly brief for %s: %s", workspace_id, outcome)
 
 
 OUTCOME_PROMPT_JOB_TYPE = "outcome_prompt"
@@ -197,6 +264,8 @@ JOB_HANDLERS: dict[str, JobHandler] = {
     STRIPE_WEBHOOK_JOB_TYPE: handle_stripe_webhook,
     SIGNAL_DECAY_SWEEP_JOB_TYPE: handle_signal_decay_sweep,
     QUEUE_ASSEMBLY_JOB_TYPE: handle_assemble_queues,
+    WEEKLY_BRIEF_SWEEP_JOB_TYPE: handle_weekly_brief_sweep,
+    WEEKLY_BRIEF_SEND_JOB_TYPE: handle_weekly_brief_send,
     OUTCOME_PROMPT_JOB_TYPE: handle_outcome_prompt,
     RESEARCH_RUN_JOB_TYPE: handle_research_run,
 }

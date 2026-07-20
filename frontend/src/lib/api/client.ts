@@ -76,6 +76,8 @@ export type DnaResponse = components["schemas"]["DnaResponse"];
 export type ProposalSummary = components["schemas"]["ProposalSummaryResponse"];
 export type InterviewState = components["schemas"]["InterviewStateResponse"];
 export type DecisionKind = components["schemas"]["DecisionKind"];
+export type BillingResponse = components["schemas"]["BillingResponse"];
+export type DraftResponse = components["schemas"]["DraftResponse"];
 export type DeclineChip = components["schemas"]["DeclineChip"];
 export type CorrectionTargetKind = components["schemas"]["CorrectionTargetKind"];
 export type OutcomeKind = components["schemas"]["OutcomeKind"];
@@ -122,6 +124,19 @@ export const api = {
     }),
 
   interview: () => request<InterviewState>("/v1/interview"),
+
+  billing: () => request<BillingResponse>("/v1/billing"),
+
+  draft: (prospectId: string) => request<DraftResponse>(`/v1/prospects/${prospectId}/draft`),
+
+  composeDraft: (prospectId: string) =>
+    request<DraftResponse>(`/v1/prospects/${prospectId}/draft`, { method: "POST", body: "{}" }),
+
+  editDraft: (prospectId: string, body: string) =>
+    request<DraftResponse>(`/v1/prospects/${prospectId}/draft`, {
+      method: "PUT",
+      body: JSON.stringify({ body }),
+    }),
 
   answerInterview: (questionKey: string, text: string) =>
     request<InterviewState>("/v1/interview/answers", {

@@ -16,6 +16,7 @@ from app.repositories.jobs import JobQueue
 HEARTBEAT_JOB_TYPE = "send_heartbeat_email"
 SIGNAL_DECAY_SWEEP_JOB_TYPE = "signal_decay_sweep"
 QUEUE_ASSEMBLY_JOB_TYPE = "assemble_queues"
+WEEKLY_BRIEF_SWEEP_JOB_TYPE = "weekly_brief_sweep"
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,10 @@ SCHEDULES: tuple[DailySchedule, ...] = (
     # Monday's queues, assembled before anyone's Monday starts (Doc 03 §5).
     # Runs after the decay sweep so ranking sees post-decay confidences.
     DailySchedule(job_type=QUEUE_ASSEMBLY_JOB_TYPE, at_utc=time(5, 45), weekday=0),
+    # The weekly brief sweep runs daily; each workspace sends only when it is
+    # Monday morning in *their* timezone (Doc 03 C8), once per week by
+    # idempotency key.
+    DailySchedule(job_type=WEEKLY_BRIEF_SWEEP_JOB_TYPE, at_utc=time(6, 0)),
 )
 
 

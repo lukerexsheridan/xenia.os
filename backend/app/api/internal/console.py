@@ -46,6 +46,7 @@ every act here is authorised per request and audited.</p>
   <button onclick="show('approval')">Approval gate</button>
   <button onclick="show('golden')">Golden set</button>
   <button onclick="show('health')">Source health</button>
+  <button onclick="show('metrics')">The five numbers</button>
 </nav>
 <div id="out"><p class="muted">Set context, then pick a screen.</p></div>
 <script>
@@ -109,6 +110,16 @@ async function show(screen) {
         + table(["Brief", "Note", "Added by", ""],
             items.map(i => [esc(i.brief_id), esc(i.note), esc(i.added_by),
               `<button onclick="removeGolden('${esc(i.brief_id)}')">Remove</button>`]));
+    } else if (screen === "metrics") {
+      const m = await call("/internal/workbench/metrics");
+      out.innerHTML = "<h2>The five numbers</h2>"
+        + table(["Metric", "Value"], [
+            ["Acceptance rate", esc((m.acceptance_rate * 100).toFixed(0) + "%")],
+            ["Teaching events", esc(m.teaching_events)],
+            ["Unedited-pass rate", esc((m.unedited_pass_rate * 100).toFixed(0) + "%")],
+            ["Outcome capture rate", esc((m.capture_rate * 100).toFixed(0) + "%")],
+            ["Tokens per brief", esc(Math.round(m.tokens_per_brief))],
+          ]);
     } else if (screen === "health") {
       const health = await call("/internal/workbench/source-health");
       const rows = Object.entries(health).flatMap(([family, events]) =>

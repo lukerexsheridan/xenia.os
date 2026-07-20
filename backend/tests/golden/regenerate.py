@@ -36,6 +36,13 @@ def main() -> None:
         )
         + "\n"  # POSIX trailing newline, matching the pre-commit hook
     )
+    from app.services.compose_weekly_brief import compose
+    from tests.services.test_weekly_brief import full_week
+
+    body = compose(full_week())
+    assert body is not None
+    (golden_dir / "weekly_brief_v1.txt").write_text(body + "\n")
+
     print("golden files regenerated — review the diff before committing")
 
 

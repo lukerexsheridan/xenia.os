@@ -145,3 +145,27 @@ class SqlTeachingRepo(WorkspaceScopedRepository):
             )
             for row in rows
         ]
+
+    def decision_counts(self) -> dict[str, int]:
+        rows = self._session.execute(
+            select(DecisionRow.kind, func.count())
+            .where(DecisionRow.workspace_id == self._workspace_id)
+            .group_by(DecisionRow.kind)
+        ).all()
+        return {str(kind): int(count) for kind, count in rows}
+
+    def correction_count(self) -> int:
+        count = self._session.execute(
+            select(func.count())
+            .select_from(CorrectionRow)
+            .where(CorrectionRow.workspace_id == self._workspace_id)
+        ).scalar_one()
+        return int(count)
+
+    def prospects_with_outcomes(self) -> set[UUID]:
+        rows = self._session.execute(
+            select(OutcomeRow.prospect_id)
+            .where(OutcomeRow.workspace_id == self._workspace_id)
+            .distinct()
+        ).all()
+        return {row[0] for row in rows}

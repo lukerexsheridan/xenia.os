@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–10 complete; Epic 11 not started.** Epic 1: the load-bearing core —
+**Epics 0–11 complete; Epic 12 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -535,8 +535,24 @@ what a win taught. Types are generated from OpenAPI
 (`frontend/e2e/loop-walk.spec.ts`: signup → interview → endorsement → queue
 → pursue → outcome → correction with named effect) is green and wired into
 CI as the `e2e` job.
-MVP mode (weekly brief email, drafts, billing, metrics panel) belongs to
-Epic 11.
+Epic 11: MVP mode — the weekly brief email (`app/services/
+compose_weekly_brief.py`: pure golden-tested composition; silence is
+structural — nothing worth saying returns None and no email exists to send;
+the daily sweep enqueues per-workspace sends only on the workspace's local
+Monday, once per week by idempotency key), opener drafts (C6:
+`app/ai/pipelines/compose_opener.py` behind the Editor gate —
+`deliverable_for_prospect` is the only read, so drafts rest on approved
+briefs only; always-editable via PUT; never sent — no send path exists),
+founding billing (a dashboard-authored Stripe Payment Link carrying
+client_reference_id + portal link via settings; webhook events sync
+workspace subscription_status through the idempotent job queue; migration
+0009 also adds delivery_timezone), the five-metric panel
+(`app/services/compute_metrics.py`: acceptance rate, teaching events,
+unedited-pass rate, capture rate, tokens per brief — cohort figures iterate
+workspace-scoped repos, never a cross-tenant query) with a console tab, and
+the Sev1 runbook (`docs/runbooks/SEV1.md`).
+Hardening to V1 (sampling narrows, cost governors, offboarding/deletion,
+security pass, remaining runbooks) belongs to Epic 12.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

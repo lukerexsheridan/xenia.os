@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     sentry_dsn: str = ""
 
+    # Founding billing (Doc 03 §9: one plan; the product links out, never
+    # implements payment UI). A Stripe Payment Link and the customer-portal
+    # login link, both created in the dashboard.
+    stripe_payment_link_url: str = ""
+    stripe_portal_login_url: str = ""
+
     # Outbound email (Resend adapter). The heartbeat job emails the founder
     # daily (Doc 10, Sprint 3); an empty recipient skips the send with a log.
     email_from: str = "Xenia <onboarding@resend.dev>"

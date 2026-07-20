@@ -83,7 +83,7 @@ every existing screen swept onto the tokens. *Exit:* no raw palette
 utility remains in a feature component; dark mode passes AA on every
 screen; loop-walk E2E green; `docs/design/DESIGN_SYSTEM.md` is review law.
 
-### Phase 2 — Experience: every screen to the bar
+### Phase 2 — Experience: every screen to the bar ✅ *(complete)*
 Screen-by-screen elevation against Doc 06's moments and the Manifesto's
 tests (M3, M5, M10, M11): the queue's verdict-first rhythm and the
 deliberate empty week; the brief's three reading depths made typographic

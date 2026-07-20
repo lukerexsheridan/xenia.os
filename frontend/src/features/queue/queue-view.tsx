@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfidenceWord } from "@/components/ui/confidence-word";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorNotice } from "@/components/ui/error-notice";
+import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { api, type DeclineChip, type DecisionKind, type QueueItem } from "@/lib/api/client";
 
@@ -137,29 +138,22 @@ function QueueCard({ item }: { item: QueueItem }) {
         </p>
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            data-testid="pursue"
-            className="transition-settle rounded-control bg-accent text-accent-ink px-3 py-1.5 text-sm font-medium hover:opacity-90"
-            onClick={() => decide.mutate({ kind: "pursue" })}
-          >
+          <Button data-testid="pursue" onClick={() => decide.mutate({ kind: "pursue" })}>
             Pursue
-          </button>
-          <button
-            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
-            onClick={() => decide.mutate({ kind: "accept" })}
-          >
+          </Button>
+          <Button variant="outline" onClick={() => decide.mutate({ kind: "accept" })}>
             Good call
-          </button>
-          <button
+          </Button>
+          <Button
             ref={declineRef}
             data-testid="decline"
+            variant="outline"
             aria-label="decline this recommendation"
             aria-expanded={chipsOpen}
-            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
             onClick={() => setChipsOpen(true)}
           >
             Decline
-          </button>
+          </Button>
           {item.has_brief && (
             <Link
               to="/prospects/$prospectId"

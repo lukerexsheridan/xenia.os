@@ -41,7 +41,7 @@ const shellRoute = createRoute({
   },
   component: () => (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
-      <header className="border-hairline flex items-baseline justify-between border-b pb-4">
+      <header className="border-hairline flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b pb-4">
         <h1 className="text-ink font-serif text-xl">Xenia</h1>
         <nav className="text-ink-muted flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link

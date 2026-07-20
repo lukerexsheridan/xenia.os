@@ -12,8 +12,12 @@ Phase 2 delivered so far: revert surfaced on the DNA changelog
 with the visible transcript, the brief's typographic fold, chip focus
 discipline (focus moves in, escape retreats, aria-expanded), furnished
 empty states, sign-in pending state, responsive shell, and the Button
-primitive on tokens. Remaining for Phase 2's exit bar: component tests for
-outcomes/draft/prospect surfaces and the both-themes screen review.
+primitive on tokens. Phase 2 closed at its exit bar: component tests now cover every feature
+directory (23 frontend tests), all action surfaces share the one Button
+primitive, and the both-themes/three-widths screen review was actually
+performed against captured stills via the new env-gated screens harness —
+finding and fixing a mobile header collision. The landing-page storyboard
+(docs/design/LANDING_PAGE_STORYBOARD.md) joins the design constitution.
 
 ## V1.1 Phase 1 — the design system as code — 2026-07-20
 

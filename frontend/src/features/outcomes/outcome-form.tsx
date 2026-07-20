@@ -5,6 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { api, type OutcomeKind } from "@/lib/api/client";
 
 const STAGES: { kind: OutcomeKind; label: string }[] = [
@@ -39,14 +40,14 @@ export function OutcomeForm({ prospectId }: { prospectId: string }) {
       <h3 className="text-ink text-sm font-medium">What happened?</h3>
       <div className="mt-2 flex flex-wrap gap-2">
         {STAGES.map((stage) => (
-          <button
+          <Button
             key={stage.kind}
             data-testid={`outcome-${stage.kind}`}
-            className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
+            variant="outline"
             onClick={() => record.mutate(stage.kind)}
           >
             {stage.label}
-          </button>
+          </Button>
         ))}
       </div>
       {note && (

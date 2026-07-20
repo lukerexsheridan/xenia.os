@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 
 export function DraftPanel({ prospectId }: { prospectId: string }) {
@@ -41,13 +42,14 @@ export function DraftPanel({ prospectId }: { prospectId: string }) {
     <section data-testid="draft-panel" className="border-hairline mt-8 border-t pt-4">
       <h3 className="text-ink text-sm font-medium">Your opener — a starting point</h3>
       {body === null ? (
-        <button
+        <Button
           data-testid="compose-draft"
-          className="transition-settle rounded-control border-hairline text-ink hover:bg-paper mt-2 border px-3 py-1.5 text-sm"
+          variant="outline"
+          className="mt-2"
           onClick={() => compose.mutate()}
         >
           Draft an opener from the brief
-        </button>
+        </Button>
       ) : (
         <div className="animate-settle-in mt-2">
           <textarea
@@ -58,18 +60,10 @@ export function DraftPanel({ prospectId }: { prospectId: string }) {
             onChange={(event) => setText(event.target.value)}
           />
           <div className="mt-2 flex gap-2">
-            <button
-              className="transition-settle rounded-control bg-accent text-accent-ink px-3 py-1.5 text-sm font-medium hover:opacity-90"
-              onClick={() => body && save.mutate(body)}
-            >
-              Save my edit
-            </button>
-            <button
-              className="transition-settle rounded-control border-hairline text-ink hover:bg-paper border px-3 py-1.5 text-sm"
-              onClick={() => void navigator.clipboard.writeText(body)}
-            >
+            <Button onClick={() => body && save.mutate(body)}>Save my edit</Button>
+            <Button variant="outline" onClick={() => void navigator.clipboard.writeText(body)}>
               Copy
-            </button>
+            </Button>
           </div>
           <p className="text-ink-faint mt-1.5 text-xs">
             Always a draft, never sent by me — it goes out from your own email, in your name.

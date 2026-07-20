@@ -59,3 +59,7 @@ class CaptureSnapshot:
             size_bytes=len(outcome.content),
             fetcher_version=FETCHER_VERSION,
         )
+
+    def content_for(self, snapshot: SourceSnapshot) -> bytes:
+        """Replay a snapshot's bytes from the content-addressed store."""
+        return self._object_store.get(snapshot_object_key(snapshot.content_sha256))

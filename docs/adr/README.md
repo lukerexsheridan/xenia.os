@@ -17,6 +17,8 @@ face). Constitutional deviations escalate to a document amendment.
 | [004](004-object-storage.md) | S3-compatible object storage, MinIO locally | Accepted |
 | [005](005-observability-vendors.md) | Sentry + deferred tracing backend | Accepted |
 | [006](006-synthetic-fixtures.md) | Synthetic fixture strategy for non-production data | Accepted |
+| [007](007-alpha-source-families.md) | Four source families at the ingestion alpha | Accepted |
+| [008](008-entity-binding-floor.md) | Entity-binding confidence floor and the human queue | Accepted |
 
 ## Writing a new ADR
 

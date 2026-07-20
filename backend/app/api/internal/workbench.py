@@ -31,6 +31,12 @@ from app.domain.rubric import RubricDimension
 from app.integrations.object_storage import S3ObjectStore
 from app.integrations.sources.http_transport import HttpxTransport
 from app.integrations.sources.politeness import PolitenessEngine
+from app.repositories.acquisition import (
+    BindingReview,
+    SqlCanonicalContentRepo,
+    SqlEntityBindingReviewRepo,
+    SqlSourceHealthRepo,
+)
 from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.business_records import SqlBusinessRecordRepo
 from app.repositories.dna import SqlDnaRepo
@@ -39,6 +45,7 @@ from app.repositories.identity import SqlIdentityRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo, StoredResearchBrief
 from app.repositories.snapshots import SqlSourceSnapshotRepo
+from app.services.acquire_footprint import AcquireFootprint
 from app.services.author_research_brief import (
     CreateResearchBrief,
     FinaliseResearchBrief,
@@ -49,6 +56,8 @@ from app.services.capture_snapshot import CaptureSnapshot
 from app.services.create_dna import CreateDna, DnaElementInput
 from app.services.create_prospect import CreateProspect
 from app.services.documents import RenderBriefPdf, RenderDnaDocument
+from app.services.resolve_binding_review import ResolveBindingReview
+from app.services.resolve_entity import ResolveEntity
 
 router = APIRouter()
 
@@ -415,3 +424,106 @@ def _brief_response(stored: StoredResearchBrief) -> BriefResponse:
         completeness_problems=list(completeness_problems(stored.brief)),
         receipt_count=len(stored.receipt_table) if stored.receipt_table is not None else None,
     )
+
+
+# ── Epic 4: acquisition, the binding floor queue, source health ──────────────
+
+
+def get_acquire_footprint(session: SessionDep) -> AcquireFootprint:
+    settings = get_settings()
+    return AcquireFootprint(
+        get_capture_snapshot(session),
+        SqlBusinessRecordRepo(session),
+        SqlCanonicalContentRepo(session),
+        SqlSourceHealthRepo(session),
+        ResolveEntity(SqlBusinessRecordRepo(session), SqlEntityBindingReviewRepo(session)),
+        ad_library_access_token=settings.ad_library_access_token,
+    )
+
+
+class FamilyResultResponse(BaseModel):
+    family: str
+    items_stored: int
+    duplicates_collapsed: int
+    queued_for_binding: int
+    couldnt_see: list[str]
+
+
+class FootprintResponse(BaseModel):
+    business_record_id: UUID
+    families: list[FamilyResultResponse]
+    canonical_counts: dict[str, int]
+
+
+@router.post("/business-records/{business_record_id}/acquire")
+def acquire_footprint(
+    business_record_id: UUID,
+    session: SessionDep,
+    acquire: Annotated[AcquireFootprint, Depends(get_acquire_footprint)],
+) -> FootprintResponse:
+    report = acquire.execute(business_record_id)
+    return FootprintResponse(
+        business_record_id=report.business_record_id,
+        families=[
+            FamilyResultResponse(
+                family=result.family,
+                items_stored=result.items_stored,
+                duplicates_collapsed=result.duplicates_collapsed,
+                queued_for_binding=result.queued_for_binding,
+                couldnt_see=result.couldnt_see,
+            )
+            for result in report.families
+        ],
+        canonical_counts=SqlCanonicalContentRepo(session).count_for_business(business_record_id),
+    )
+
+
+class BindingReviewResponse(BaseModel):
+    id: UUID
+    candidate_name: str
+    website_domain: str | None
+    register_number: str | None
+    confidence: float
+    canonical_item_count: int
+    status: str
+
+
+def _review_response(review: BindingReview) -> BindingReviewResponse:
+    return BindingReviewResponse(
+        id=review.id,
+        candidate_name=review.candidate_name,
+        website_domain=review.website_domain,
+        register_number=review.register_number,
+        confidence=review.confidence,
+        canonical_item_count=len(review.canonical_item_ids),
+        status=review.status.value,
+    )
+
+
+@router.get("/binding-reviews")
+def list_binding_reviews(session: SessionDep) -> list[BindingReviewResponse]:
+    return [
+        _review_response(review) for review in SqlEntityBindingReviewRepo(session).list_pending()
+    ]
+
+
+class BindingResolutionRequest(BaseModel):
+    business_record_id: UUID | None  # None rejects the binding
+
+
+@router.post("/binding-reviews/{review_id}/resolve")
+def resolve_binding_review(
+    review_id: UUID, body: BindingResolutionRequest, session: SessionDep
+) -> BindingReviewResponse:
+    review = ResolveBindingReview(
+        SqlEntityBindingReviewRepo(session),
+        SqlCanonicalContentRepo(session),
+        SqlBusinessRecordRepo(session),
+    ).execute(review_id, business_record_id=body.business_record_id)
+    return _review_response(review)
+
+
+@router.get("/source-health")
+def source_health(session: SessionDep) -> dict[str, dict[str, int]]:
+    """Per-family fetch/parse outcome counts (Doc 09 §10's Steward view)."""
+    return SqlSourceHealthRepo(session).counts()

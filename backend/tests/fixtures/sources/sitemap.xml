@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://brightpath.example/</loc></url>
+  <url><loc>https://brightpath.example/about</loc></url>
+  <url><loc>https://brightpath.example/pricing</loc></url>
+  <url><loc>https://brightpath.example/blog/glow-guide</loc></url>
+  <url><loc>https://brightpath.example/basket</loc></url>
+  <url><loc>https://elsewhere.example/about</loc></url>
+</urlset>

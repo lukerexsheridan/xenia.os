@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # internal access is separately authorised). Comma-separated Supabase subs.
     editor_auth_subjects: str = ""
 
+    # Source credentials (Epic 4 adapters). Empty = family declared
+    # couldn't-see rather than guessed at (Doc 09 §2's honest degradation).
+    companies_house_api_key: str = ""
+    ad_library_access_token: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

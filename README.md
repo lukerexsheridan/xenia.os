@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–3 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–4 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -19,9 +19,11 @@ this codebase implements them and any deviation requires an ADR
 > content-addressed snapshot store + fetch CLI, Evidence (E1–E5) with deterministic
 > receipt tables, B1–B8 briefs with frozen receipt tables and replayable derivation
 > records, Editor-authorised internal workbench API, and golden-tested PDF renderers
-> for the brief and DNA document. No AI implementation, no customer-facing features —
-> by design, per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 4 (source
-> adapters) awaits the research-phase gate.
+> for the brief and DNA document. Epic 4: the four-family ingestion alpha —
+> fixture-tested adapters (register, ads, websites, hiring), canonical content with
+> dedup, strong-key entity binding with a human floor queue, and source-health
+> telemetry. No AI implementation, no customer-facing features — by design, per the
+> [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 5 (evidence machinery) is next.
 
 ## Stack
 

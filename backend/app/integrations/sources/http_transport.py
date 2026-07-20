@@ -14,11 +14,16 @@ _MAX_CONTENT_BYTES = 10 * 1024 * 1024  # a snapshot is a page, not an archive
 
 
 class HttpxTransport:
+    def __init__(self, *, basic_auth: tuple[str, str] | None = None) -> None:
+        # e.g. the Companies House API authenticates with the key as username.
+        self._basic_auth = basic_auth
+
     def get(self, url: str, *, user_agent: str) -> TransportResponse:
         try:
             response = httpx.get(
                 url,
                 headers={"User-Agent": user_agent},
+                auth=self._basic_auth,
                 timeout=_TIMEOUT_SECONDS,
                 follow_redirects=True,
             )

@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–3 complete; Epic 4 not started.** Epic 1: the load-bearing core —
+**Epics 0–4 complete; Epic 5 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -459,7 +459,13 @@ B1–B8 with the completeness floor, Ring-1 persistence for prospects/DNA (appen
 changelog)/briefs/edit log, the Editor-authorised internal sub-app at `/internal`
 (its Swagger UI is the workbench's ugly-but-honest surface), deterministic
 golden-file PDF renderers for the brief and the DNA document, and Sentry wiring.
-Source adapters, entity binding, extraction, and the L0 battery belong to Epics 4–7.
+Epic 4: source ingestion — the four-family alpha (ADR-007: Companies House, ad
+library, websites, hiring) as fixture-tested adapters over the politeness engine,
+the canonical content model with near-dup collapse, entity binding v1 (strong keys
+bind, everything else queues for the Editor — ADR-008), the human floor queue,
+source-health telemetry, and `AcquireFootprint` wiring it all behind
+`/internal/workbench/business-records/{id}/acquire`. Extraction, signals, and the
+L0 battery belong to Epics 5–7.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

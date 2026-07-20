@@ -327,3 +327,99 @@ def test_a_nonexistent_workspace_is_a_404_not_a_surprise(db: Engine) -> None:
     )
     assert response.status_code == 404
     assert response.json()["code"] == "not_found"
+
+
+# ── Epic 4: binding floor queue + source health (internal API) ───────────────
+
+
+def test_adr008_the_editor_resolves_the_binding_floor_queue(db: Engine) -> None:
+    from sqlalchemy.orm import Session
+
+    from app.repositories.acquisition import SqlEntityBindingReviewRepo
+    from app.repositories.business_records import SqlBusinessRecordRepo
+    from app.repositories.orm import CanonicalContentRow
+    from app.repositories.snapshots import SqlSourceSnapshotRepo
+
+    client = make_client()
+    headers = editor_headers()
+
+    with Session(db) as session:
+        business_id = (
+            SqlBusinessRecordRepo(session)
+            .find_or_create(
+                canonical_name="Brightpath Ltd",
+                website_domain="brightpath.example",
+                register_number=None,
+            )
+            .id
+        )
+        snapshot = SqlSourceSnapshotRepo(session).add(
+            url="https://graph.example/ads",
+            content_sha256="0" * 64,
+            content_type="application/json",
+            http_status=200,
+            size_bytes=10,
+            fetcher_version="test/1",
+        )
+        row = CanonicalContentRow(
+            item_kind="ad_record",
+            content_key="1" * 64,
+            source_family="ad_library",
+            payload={"external_id": "x"},
+            snapshot_id=snapshot.id,
+            business_record_id=None,
+        )
+        session.add(row)
+        session.flush()
+        review = SqlEntityBindingReviewRepo(session).enqueue(
+            candidate_name="Brightpath",
+            website_domain=None,
+            register_number=None,
+            confidence=0.7,
+            canonical_item_ids=[row.id],
+        )
+        session.commit()
+        review_id, canonical_id = review.id, row.id
+
+    pending = client.get("/internal/workbench/binding-reviews", headers=headers)
+    assert pending.status_code == 200
+    assert [item["id"] for item in pending.json()] == [str(review_id)]
+
+    resolved = client.post(
+        f"/internal/workbench/binding-reviews/{review_id}/resolve",
+        json={"business_record_id": str(business_id)},
+        headers=headers,
+    )
+    assert resolved.status_code == 200
+    assert resolved.json()["status"] == "bound"
+
+    with db.connect() as connection:
+        bound_to = connection.execute(
+            text("SELECT business_record_id FROM canonical_content WHERE id = :id"),
+            {"id": canonical_id},
+        ).scalar_one()
+    assert str(bound_to) == str(business_id)
+
+    # A resolved review is never resolved twice.
+    again = client.post(
+        f"/internal/workbench/binding-reviews/{review_id}/resolve",
+        json={"business_record_id": None},
+        headers=headers,
+    )
+    assert again.status_code == 409
+
+
+def test_doc09_s10_source_health_is_visible_to_the_editor(db: Engine) -> None:
+    from sqlalchemy.orm import Session
+
+    from app.repositories.acquisition import SqlSourceHealthRepo
+
+    with Session(db) as session:
+        SqlSourceHealthRepo(session).record(
+            source_family="website", event="fetched", detail="https://brightpath.example/"
+        )
+        session.commit()
+
+    response = make_client().get("/internal/workbench/source-health", headers=editor_headers())
+    assert response.status_code == 200
+    assert response.json()["website"]["fetched"] == 1

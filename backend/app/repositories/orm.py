@@ -47,7 +47,16 @@ RING_1_TABLES = (
 
 # The shared world model: facts belong to nobody, judgments stay in Ring 1.
 # The structural canary asserts none of these has a workspace column.
-RING_2_TABLES = ("business_records", "source_snapshots", "evidence")
+# (entity_binding_reviews and source_health_events are ops machinery rather
+# than world model, but the same structural guarantee protects them.)
+RING_2_TABLES = (
+    "business_records",
+    "source_snapshots",
+    "evidence",
+    "canonical_content",
+    "entity_binding_reviews",
+    "source_health_events",
+)
 
 
 class WorkspaceRow(Base):
@@ -276,3 +285,66 @@ class EditLogEntryRow(Base):
     rubric_dimension: Mapped[str] = mapped_column(String(30))
     note: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ── Ring 2 / ops: acquisition machinery (Epic 4) ─────────────────────────────
+
+
+class CanonicalContentRow(Base):
+    """A canonical item (Doc 09 §5) referenced to its snapshot; deduplicated
+    by content key at ingestion, where it is cheap. business_record_id stays
+    NULL until entity binding resolves (ADR-008)."""
+
+    __tablename__ = "canonical_content"
+    __table_args__ = (
+        UniqueConstraint("item_kind", "content_key", name="uq_canonical_content_item_kind"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    item_kind: Mapped[str] = mapped_column(String(20))
+    content_key: Mapped[str] = mapped_column(String(64))
+    source_family: Mapped[str] = mapped_column(String(30))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    snapshot_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("source_snapshots.id", ondelete="RESTRICT")
+    )
+    business_record_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("business_records.id", ondelete="SET NULL"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class EntityBindingReviewRow(Base):
+    """The human floor queue (ADR-008): ambiguous bindings await the Editor."""
+
+    __tablename__ = "entity_binding_reviews"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    candidate_name: Mapped[str] = mapped_column(String(300))
+    website_domain: Mapped[str | None] = mapped_column(String(255))
+    register_number: Mapped[str | None] = mapped_column(String(50))
+    proposed_business_record_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("business_records.id", ondelete="SET NULL")
+    )
+    confidence: Mapped[float] = mapped_column(Float)
+    canonical_item_ids: Mapped[list[str]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20))  # pending | bound | rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SourceHealthEventRow(Base):
+    """Source-health telemetry (Doc 09 §10): per-family fetch/parse outcomes."""
+
+    __tablename__ = "source_health_events"
+    __table_args__ = (
+        Index("ix_source_health_events_family_occurred", "source_family", "occurred_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    source_family: Mapped[str] = mapped_column(String(30))
+    event: Mapped[str] = mapped_column(String(30))  # fetched|refused|parse_failed|items_emitted
+    detail: Mapped[str] = mapped_column(String(500))
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

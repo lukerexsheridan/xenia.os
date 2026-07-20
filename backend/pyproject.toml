@@ -20,6 +20,8 @@ dependencies = [
     "fpdf2>=2.8.7",
     # Epic 3: error reporting from first deploy (ADR-005; DEBT.md repayment).
     "sentry-sdk[fastapi]>=2.66.0",
+    # Epic 4: deterministic readability cleaning for the website adapter.
+    "beautifulsoup4>=4.15.0",
 ]
 
 [dependency-groups]

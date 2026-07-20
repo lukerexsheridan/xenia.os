@@ -1,0 +1,8 @@
+{
+  "company_number": "12345678",
+  "company_name": "BRIGHTPATH LTD",
+  "items": [
+    {"category": "accounts", "description": "accounts-with-accounts-type-micro-entity", "date": "2026-01-31", "type": "AA"},
+    {"category": "confirmation-statement", "description": "confirmation-statement-with-no-updates", "date": "2026-03-01", "type": "CS01"}
+  ]
+}

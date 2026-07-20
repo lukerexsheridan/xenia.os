@@ -144,7 +144,36 @@ export const api = {
       body: JSON.stringify({ question_key: questionKey, text }),
     }),
 
-  briefPdfUrl: (prospectId: string) => `${API_BASE_URL}/v1/prospects/${prospectId}/brief.pdf`,
-  dnaPdfUrl: () => `${API_BASE_URL}/v1/dna/document.pdf`,
-  prospectsCsvUrl: () => `${API_BASE_URL}/v1/prospects/export.csv`,
+  downloadBriefPdf: (prospectId: string) =>
+    download(`/v1/prospects/${prospectId}/brief.pdf`, "brief.pdf"),
+  downloadDnaPdf: () => download("/v1/dna/document.pdf", "dna.pdf"),
+  downloadProspectsCsv: () => download("/v1/prospects/export.csv", "prospects.csv"),
 };
+
+/**
+ * Authenticated file download. A bare <a href> carries no Authorization
+ * header, so every export 401s in a browser — the file must be fetched with
+ * the bearer token and handed to the browser as a blob.
+ */
+export async function download(path: string, filename: string): Promise<void> {
+  const token = getToken();
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      "download_failed",
+      "That export didn't come through — nothing you did caused this. Try again.",
+    );
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}

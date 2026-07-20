@@ -53,9 +53,9 @@ const shellRoute = createRoute({
           <Link to="/interview" activeProps={{ className: "font-semibold" }}>
             Interview
           </Link>
-          <a href={api.prospectsCsvUrl()} className="text-stone-500">
+          <button className="text-stone-500" onClick={() => void api.downloadProspectsCsv()}>
             Export
-          </a>
+          </button>
           <button
             className="text-stone-400"
             onClick={() => {

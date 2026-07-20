@@ -159,9 +159,13 @@ export function DnaView() {
         </ul>
       </section>
       <p className="mt-6">
-        <a className="text-sm text-sky-800 underline" href={api.dnaPdfUrl()}>
+        <button
+          data-testid="export-dna-pdf"
+          className="text-sm text-sky-800 underline"
+          onClick={() => void api.downloadDnaPdf()}
+        >
           Export the DNA document (PDF)
-        </a>
+        </button>
       </p>
     </div>
   );

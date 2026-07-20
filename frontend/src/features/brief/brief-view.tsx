@@ -63,9 +63,13 @@ export function BriefView({ prospectId }: { prospectId: string }) {
         </ol>
       </section>
       <p className="mt-8">
-        <a className="text-sm text-sky-800 underline" href={api.briefPdfUrl(prospectId)}>
+        <button
+          data-testid="export-brief-pdf"
+          className="text-sm text-sky-800 underline"
+          onClick={() => void api.downloadBriefPdf(prospectId)}
+        >
           Export as PDF
-        </a>
+        </button>
       </p>
     </article>
   );

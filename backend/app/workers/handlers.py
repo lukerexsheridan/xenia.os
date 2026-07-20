@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.ai.pipelines.extract_page_evidence import ExtractPageEvidence
 from app.ai.providers.openai_responses import OpenAIResponsesProvider
 from app.core.config import get_settings
+from app.core.db import set_app_context
 from app.domain.audit import AuditAction
 from app.domain.prospect import ProspectStatus
 from app.integrations.object_storage import S3ObjectStore
@@ -39,7 +40,7 @@ from app.repositories.recommendations import SqlRecommendationRepo
 from app.repositories.snapshots import SqlSourceSnapshotRepo
 from app.repositories.teaching import SqlTeachingRepo
 from app.services.acquire_footprint import AcquireFootprint
-from app.services.assemble_queue import AssembleQueue
+from app.services.assemble_queue import build_assemble_queue
 from app.services.capture_snapshot import CaptureSnapshot
 from app.services.compose_weekly_brief import SendWeeklyBrief
 from app.services.derive_signals import DeriveSignals
@@ -83,20 +84,21 @@ def handle_stripe_webhook(session: Session, job: Job) -> None:
         reference = data_object.get("client_reference_id")
         customer = data_object.get("customer")
         if reference and customer:
-            identity.set_billing(
-                UUID(str(reference)), stripe_customer_id=str(customer), status="active"
-            )
+            workspace_id = UUID(str(reference))
+            set_app_context(session, workspace_id=workspace_id)
+            identity.set_billing(workspace_id, stripe_customer_id=str(customer), status="active")
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         customer = data_object.get("customer")
         if customer:
-            workspace_id = identity.workspace_id_for_stripe_customer(str(customer))
-            if workspace_id is not None:
+            billed_workspace_id = identity.workspace_id_for_stripe_customer(str(customer))
+            if billed_workspace_id is not None:
+                set_app_context(session, workspace_id=billed_workspace_id)
                 status = (
                     "canceled"
                     if event_type.endswith("deleted")
                     else str(data_object.get("status", "active"))
                 )
-                identity.set_billing(workspace_id, stripe_customer_id=None, status=status)
+                identity.set_billing(billed_workspace_id, stripe_customer_id=None, status=status)
     logger.info(
         "stripe webhook processed: %s (%s)",
         job.payload.get("event_id"),
@@ -114,25 +116,40 @@ def handle_signal_decay_sweep(session: Session, job: Job) -> None:
         derive.execute(business_record_id)
 
 
+ASSEMBLE_WORKSPACE_QUEUE_JOB_TYPE = "assemble_workspace_queue"
+
+
 def handle_assemble_queues(session: Session, job: Job) -> None:
-    """Monday's queues for every workspace (Doc 03 §5): deterministic
-    scoring against each tenant's DNA, through workspace-scoped repos."""
+    """Monday's sweep enqueues one assembly job per workspace (Doc 03 §5).
+
+    One job per tenant, deliberately: a poisoned workspace dead-letters its
+    own Monday, never everyone's, and each per-workspace job runs under that
+    workspace's tenancy context."""
+    now = datetime.now(UTC)
+    year, week, _ = now.isocalendar()
+    queue = JobQueue(session)
     for workspace_id in SqlIdentityRepo(session).list_workspace_ids():
-        result = AssembleQueue(
-            SqlDnaRepo(session, workspace_id),
-            SqlProspectRepo(session, workspace_id),
-            SqlBusinessRecordRepo(session),
-            SqlKnowledgeRepo(session),
-            SqlRecommendationRepo(session, workspace_id),
-            SqlAuditEntryRepo(session, workspace_id),
-        ).execute(workspace_id=workspace_id)
-        logger.info(
-            "queue assembled: workspace=%s week=%s recommended=%d excluded=%d",
-            workspace_id,
-            result.week_key,
-            result.recommended,
-            result.excluded,
+        queue.enqueue(
+            ASSEMBLE_WORKSPACE_QUEUE_JOB_TYPE,
+            idempotency_key=f"assemble_queue:{workspace_id}:{year}-W{week:02d}",
+            payload={"workspace_id": str(workspace_id)},
+            workspace_id=workspace_id,
         )
+
+
+def handle_assemble_workspace_queue(session: Session, job: Job) -> None:
+    workspace_id = UUID(str(job.payload["workspace_id"]))
+    # The RLS braces bind per transaction: worker writes carry the same
+    # tenancy context as API writes (Doc 08 §8) — a job is not exempt.
+    set_app_context(session, workspace_id=workspace_id)
+    result = build_assemble_queue(session, workspace_id).execute(workspace_id=workspace_id)
+    logger.info(
+        "queue assembled: workspace=%s week=%s recommended=%d excluded=%d",
+        workspace_id,
+        result.week_key,
+        result.recommended,
+        result.excluded,
+    )
 
 
 WEEKLY_BRIEF_SEND_JOB_TYPE = "weekly_brief_send"
@@ -163,6 +180,7 @@ def handle_weekly_brief_sweep(session: Session, job: Job) -> None:
 
 def handle_weekly_brief_send(session: Session, job: Job) -> None:
     workspace_id = UUID(str(job.payload["workspace_id"]))
+    set_app_context(session, workspace_id=workspace_id)
     outcome = SendWeeklyBrief(
         SqlIdentityRepo(session),
         SqlRecommendationRepo(session, workspace_id),
@@ -185,6 +203,7 @@ def handle_outcome_prompt(session: Session, job: Job) -> None:
     renders it (the weekly brief) belongs to the delivery epics."""
     workspace_id = UUID(str(job.payload["workspace_id"]))
     prospect_id = UUID(str(job.payload["prospect_id"]))
+    set_app_context(session, workspace_id=workspace_id)
     prospect = SqlProspectRepo(session, workspace_id).get(prospect_id)
     if prospect is None or prospect.status is not ProspectStatus.PURSUED:
         return
@@ -264,6 +283,7 @@ JOB_HANDLERS: dict[str, JobHandler] = {
     STRIPE_WEBHOOK_JOB_TYPE: handle_stripe_webhook,
     SIGNAL_DECAY_SWEEP_JOB_TYPE: handle_signal_decay_sweep,
     QUEUE_ASSEMBLY_JOB_TYPE: handle_assemble_queues,
+    ASSEMBLE_WORKSPACE_QUEUE_JOB_TYPE: handle_assemble_workspace_queue,
     WEEKLY_BRIEF_SWEEP_JOB_TYPE: handle_weekly_brief_sweep,
     WEEKLY_BRIEF_SEND_JOB_TYPE: handle_weekly_brief_send,
     OUTCOME_PROMPT_JOB_TYPE: handle_outcome_prompt,

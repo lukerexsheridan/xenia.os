@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy.orm import Session
+
 from app.domain.audit import AuditAction
 from app.domain.dna import Dna
 from app.domain.prospect import Prospect, ProspectStatus
@@ -80,7 +82,7 @@ class AssembleQueue:
         candidates = tuple(self._candidate(prospect, dna, current) for prospect in prospects)
         assembled = assemble_queue(candidates, week_key=week_key)
 
-        records = self._records(assembled, workspace_id, prospects)
+        records = self._records(assembled, workspace_id, current)
         self._recommendation_repo.replace_week(week_key, records)
         self._advance_surfaced(assembled, prospects)
         self._audit_repo.append(
@@ -110,9 +112,8 @@ class AssembleQueue:
         self,
         assembled: AssembledQueue,
         workspace_id: UUID,
-        prospects: list[Prospect],
+        now: datetime,
     ) -> list[Recommendation]:
-        now = datetime.now(UTC)
         records: list[Recommendation] = []
         ranked = assembled.ranked
         for index, candidate in enumerate(ranked):
@@ -153,3 +154,18 @@ class AssembleQueue:
         for prospect in prospects:
             if prospect.id in ranked_ids and prospect.status is ProspectStatus.SURFACED:
                 self._prospect_repo.save_status(prospect.advance(ProspectStatus.RECOMMENDED))
+
+
+def build_assemble_queue(session: Session, workspace_id: UUID) -> AssembleQueue:
+    """The one composition root for assembly. Three call sites (the /v1
+    correction path, the internal workbench trigger, the Monday job) must
+    wire identical dependencies; a drifted copy would mean 'the same queue'
+    assembled differently depending on who asked."""
+    return AssembleQueue(
+        SqlDnaRepo(session, workspace_id),
+        SqlProspectRepo(session, workspace_id),
+        SqlBusinessRecordRepo(session),
+        SqlKnowledgeRepo(session),
+        SqlRecommendationRepo(session, workspace_id),
+        SqlAuditEntryRepo(session, workspace_id),
+    )

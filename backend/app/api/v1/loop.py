@@ -26,13 +26,12 @@ from app.repositories.audit import SqlAuditEntryRepo
 from app.repositories.business_records import SqlBusinessRecordRepo
 from app.repositories.dna import SqlDnaRepo
 from app.repositories.jobs import JobQueue
-from app.repositories.knowledge import SqlKnowledgeRepo
 from app.repositories.prospects import SqlProspectRepo
 from app.repositories.recommendations import SqlRecommendationRepo
 from app.repositories.research_briefs import SqlResearchBriefRepo
 from app.repositories.teaching import SqlTeachingRepo
 from app.services.apply_correction import ApplyCorrection
-from app.services.assemble_queue import AssembleQueue
+from app.services.assemble_queue import build_assemble_queue
 from app.services.authenticate_user import AuthenticatedContext
 from app.services.decide_dna_proposal import DecideDnaProposal
 from app.services.record_decision import RecordDecision
@@ -42,17 +41,6 @@ router = APIRouter()
 
 SessionDep = Annotated[Session, Depends(get_db_session)]
 ContextDep = Annotated[AuthenticatedContext, Depends(get_authenticated_context)]
-
-
-def _assembler(session: Session, workspace_id: UUID) -> AssembleQueue:
-    return AssembleQueue(
-        SqlDnaRepo(session, workspace_id),
-        SqlProspectRepo(session, workspace_id),
-        SqlBusinessRecordRepo(session),
-        SqlKnowledgeRepo(session),
-        SqlRecommendationRepo(session, workspace_id),
-        SqlAuditEntryRepo(session, workspace_id),
-    )
 
 
 class ScoreComponentResponse(BaseModel):
@@ -198,7 +186,7 @@ def apply_correction(
         SqlDnaRepo(session, workspace_id),
         SqlRecommendationRepo(session, workspace_id),
         SqlTeachingRepo(session, workspace_id),
-        _assembler(session, workspace_id),
+        build_assemble_queue(session, workspace_id),
         SqlAuditEntryRepo(session, workspace_id),
     ).execute(
         workspace_id=workspace_id,

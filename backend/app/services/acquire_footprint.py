@@ -61,6 +61,16 @@ class FamilyResult:
     couldnt_see: list[str] = field(default_factory=list)
 
 
+_ALL_FAMILIES = frozenset(
+    {
+        companies_house.SOURCE_FAMILY,
+        websites.SOURCE_FAMILY,
+        hiring.SOURCE_FAMILY,
+        ad_library.SOURCE_FAMILY,
+    }
+)
+
+
 @dataclass(frozen=True)
 class FootprintReport:
     business_record_id: UUID
@@ -84,17 +94,36 @@ class AcquireFootprint:
         self._health_repo = health_repo
         self._resolve_entity = resolve_entity
         self._ad_library_access_token = ad_library_access_token
+        self._fetches_remaining: int | None = None
+        self.fetches_used = 0
 
-    def execute(self, business_record_id: UUID) -> FootprintReport:
+    def execute(
+        self,
+        business_record_id: UUID,
+        *,
+        families: frozenset[str] | None = None,
+        max_fetches: int | None = None,
+    ) -> FootprintReport:
+        """Acquire the footprint for the recipe's families within its fetch
+        budget (Doc 09 §9): plans are finite, the budget binds structurally,
+        and exhaustion degrades honestly into couldn't-see — never a failure,
+        never an overrun."""
         business = self._business_repo.get(business_record_id)
         if business is None:
             raise NotFoundError("business record not found")
+        self._fetches_remaining = max_fetches
+        self.fetches_used = 0
 
+        chosen = families if families is not None else _ALL_FAMILIES
         results: list[FamilyResult] = []
-        results.append(self._acquire_register(business_record_id, business.register_number))
-        results.append(self._acquire_website(business_record_id, business.website_domain))
-        results.append(self._acquire_hiring(business_record_id, business.website_domain))
-        results.append(self._acquire_ads(business.canonical_name))
+        if companies_house.SOURCE_FAMILY in chosen:
+            results.append(self._acquire_register(business_record_id, business.register_number))
+        if websites.SOURCE_FAMILY in chosen:
+            results.append(self._acquire_website(business_record_id, business.website_domain))
+        if hiring.SOURCE_FAMILY in chosen:
+            results.append(self._acquire_hiring(business_record_id, business.website_domain))
+        if ad_library.SOURCE_FAMILY in chosen:
+            results.append(self._acquire_ads(business.canonical_name))
         return FootprintReport(business_record_id=business_record_id, families=tuple(results))
 
     # ── families ─────────────────────────────────────────────────────────
@@ -230,6 +259,15 @@ class AcquireFootprint:
         )
 
     def _fetch(self, url: str, result: FamilyResult, *, family: str) -> tuple[bytes, UUID] | None:
+        if self._fetches_remaining is not None and self._fetches_remaining <= 0:
+            note = "recipe fetch budget exhausted — deferred to the next run"
+            if note not in result.couldnt_see:
+                result.couldnt_see.append(note)
+                self._health_repo.record(source_family=family, event="budget_exhausted", detail=url)
+            return None
+        if self._fetches_remaining is not None:
+            self._fetches_remaining -= 1
+        self.fetches_used += 1
         try:
             snapshot = self._capture.execute(url)
         except FetchRefusedError as refusal:

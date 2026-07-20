@@ -440,7 +440,7 @@ Backend-only equivalents run from `backend/` with `uv run <tool>`; frontend from
 
 ## Current state
 
-**Epics 0–5 complete; Epic 6 not started.** Epic 1: the load-bearing core —
+**Epics 0–6 complete; Epic 7 not started.** Epic 1: the load-bearing core —
 Workspace/User with workspace-scoped repositories and Postgres RLS (enabled + forced
 on Ring-1 tables — the tenancy canary in `backend/tests/repositories/test_rls.py` is
 permanent), Supabase JWT verification (`/v1/me` provisions workspace + owner,
@@ -473,7 +473,14 @@ replayable), the graph as columns (corroborates/conflicts/supersedes;
 same-domain repetition never corroborates), and the four signal families as
 rules with derivations stored and deterministic freshness decay (the daily
 signal_decay_sweep job re-derives — stale signals demote toward unknown).
-Orchestration and the L0 battery belong to Epics 6–7.
+Epic 6: research orchestration —
+the rules-based planner (`app/services/research_run.py`: cold/delta/refresh
+recipes, cache-aware — stale or absent signal families re-verify, fresh ones
+never re-crawl), recipe fetch budgets that bind structurally and degrade into
+honest couldn't-see, per-family coverage reports computed from the plan, the
+per-stage ledger, and "research this business" as one queued idempotent job
+(research_run) whose retry resumes past completed work by construction.
+Composition and the L0 battery belong to Epic 7.
 Do not add features, AI implementation, or customer-facing functionality without
 explicit instruction — the build plan sequences that work behind founder decisions
 and the research-phase gate.

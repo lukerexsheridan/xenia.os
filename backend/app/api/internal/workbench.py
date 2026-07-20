@@ -62,6 +62,7 @@ from app.services.create_prospect import CreateProspect
 from app.services.derive_signals import DeriveSignals
 from app.services.documents import RenderBriefPdf, RenderDnaDocument
 from app.services.extract_evidence import ExtractEvidence
+from app.services.research_run import RunResearch
 from app.services.resolve_binding_review import ResolveBindingReview
 from app.services.resolve_entity import ResolveEntity
 
@@ -612,4 +613,61 @@ def _signal_response(signal: Signal) -> SignalResponse:
         supporting_evidence_count=len(signal.supporting_evidence_ids),
         newest_observation_at=signal.newest_observation_at,
         rule_version=signal.rule_version,
+    )
+
+
+# ── Epic 6: the orchestrated research run ────────────────────────────────────
+
+
+class ResearchRequest(BaseModel):
+    force_refresh: bool = False
+
+
+class CoverageResponse(BaseModel):
+    source_family: str
+    achieved: bool
+    couldnt_see: list[str]
+
+
+class ResearchRunResponse(BaseModel):
+    business_record_id: UUID
+    trigger: str
+    source_families: list[str]
+    max_fetches: int
+    coverage: list[CoverageResponse]
+    couldnt_see: list[str]
+    signals: list[SignalResponse]
+    ledger: dict[str, int]
+
+
+@router.post("/business-records/{business_record_id}/research")
+def run_research(
+    business_record_id: UUID,
+    body: ResearchRequest,
+    session: SessionDep,
+    acquire: Annotated[AcquireFootprint, Depends(get_acquire_footprint)],
+    extract: Annotated[ExtractEvidence, Depends(get_extract_evidence)],
+) -> ResearchRunResponse:
+    report = RunResearch(
+        acquire,
+        extract,
+        DeriveSignals(SqlEvidenceRepo(session), SqlKnowledgeRepo(session)),
+        SqlKnowledgeRepo(session),
+    ).execute(business_record_id, force_refresh=body.force_refresh)
+    return ResearchRunResponse(
+        business_record_id=report.business_record_id,
+        trigger=report.recipe.trigger.value,
+        source_families=sorted(report.recipe.source_families),
+        max_fetches=report.recipe.max_fetches,
+        coverage=[
+            CoverageResponse(
+                source_family=entry.source_family,
+                achieved=entry.achieved,
+                couldnt_see=list(entry.couldnt_see),
+            )
+            for entry in report.coverage
+        ],
+        couldnt_see=report.couldnt_see,
+        signals=[_signal_response(signal) for signal in report.signals],
+        ledger=report.ledger,
     )

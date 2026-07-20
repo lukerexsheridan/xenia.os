@@ -8,7 +8,7 @@ constitutional documents under [`docs/`](docs/). Those documents are the source 
 this codebase implements them and any deviation requires an ADR
 (see [`docs/adr/`](docs/adr/README.md)).
 
-> Current state: **Epics 0–5 complete**. Epic 1: authenticated multi-tenant core
+> Current state: **Epics 0–6 complete**. Epic 1: authenticated multi-tenant core
 > (Supabase JWT → Workspace/User, workspace-scoped repositories + Postgres RLS),
 > append-only audit stream, feature flags, Postgres job queue with worker/scheduler/
 > dead-letter, heartbeat email, idempotent Stripe webhook receiver. Epic 2: the
@@ -26,8 +26,10 @@ this codebase implements them and any deviation requires an ADR
 > contained AI pipeline (span-grounded page extraction with cost metering),
 > content-derived Evidence IDs, graph relations as columns, and rule-derived
 > signals with freshness decay. Customer-facing features remain deliberately
-> absent per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md); Epic 6
-> (research orchestration) is next.
+> absent per the [V1 Build Plan](docs/10_V1_BUILD_PLAN.md). Epic 6: research
+> orchestration — cache-aware cold/delta/refresh recipes, binding fetch budgets,
+> coverage + couldn't-see computed from the plan, per-stage ledgers, and the
+> queued idempotent research run. Epic 7 (brief composition + L0) is next.
 
 ## Stack
 

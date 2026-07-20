@@ -333,6 +333,27 @@ Unless explicitly instructed otherwise:
 - Create one logical commit.
 - Stop and wait for approval.
 
+---
+
+# Stop Conditions
+
+Stop immediately and wait for approval if:
+
+- The constitutional documents conflict.
+- A new ADR is required.
+- An architectural change affects future Epics.
+- The implementation requires changing Epic scope.
+- A dependency is proposed that was not previously justified.
+- Security implications are uncertain.
+- Tests cannot be made green without changing documented behaviour.
+- The requested implementation conflicts with the Engineering Operating Manual.
+
+Do not guess.
+
+Explain the issue, present options with trade-offs, and wait for approval before proceeding.
+
+---
+
 # Decision Making
 
 When multiple implementations satisfy the requirements:

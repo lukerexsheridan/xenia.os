@@ -1,114 +1,95 @@
 # Xenia Design System
 
-*The executable form of Doc 06 §8. Tokens are law: a feature component
-that reaches for a raw palette utility instead of a semantic token is a
-review failure, exactly as hand-written fetch code outside the API client
-is. Source of truth in code: `frontend/src/styles/globals.css`.*
+*Derived from `xenia-source/` — the founder-locked design authority
+(ADR-014). Tokens are law: a feature component that reaches for a raw
+palette utility instead of a semantic token is a review failure. Source of
+truth in code: `frontend/src/styles/globals.css`; visual reference: the
+XeniaOS frame in `xenia-source/frontend/src/os/`.*
 
-## 1. Colour — ink, paper, one accent, semantic meaning
+## 1. Colour — deep space, white ink, one royal signature
 
-Two neutrals and one accent carry the whole interface; every additional
-colour must *mean* something (confidence, risk) and never decorates.
+Dark-first, single theme (`color-scheme: dark`). Two families carry the
+interface — the blacks and the whites — plus the royal-blue signature used
+sparingly, and semantic colour that always means something.
 
-| Token | Light | Dark | Role |
-|---|---|---|---|
-| `paper` | `#faf9f7` | `#141312` | The page. Warm, not clinical white / not dead black. |
-| `surface` | `#ffffff` | `#1c1a18` | Cards, the typeset sheet. |
-| `ink` | `#211e1a` | `#e9e6e0` | Primary text. Warm near-black — a document, not a terminal. |
-| `ink-muted` | `#6d675e` | `#9d968b` | Secondary text. AA against its paper. |
-| `ink-faint` | `#98918a` | `#6d675f` | Tertiary/metadata. AA-large only; never for reading text. |
-| `hairline` | `#e6e2db` | `#2e2b27` | Borders. One weight; boxes never carry hierarchy. |
-| `accent` | `#3a5bc7` | `#93aaf5` | The one accent: links, primary actions, focus. Stripe-authority blue, warmed. |
-| `accent-ink` | `#ffffff` | `#10131f` | Text on accent. |
-
-Semantic colour (meaning only, word always present — colour never sole
-carrier):
-
-| Token | Light bg/fg | Dark bg/fg | Meaning |
-|---|---|---|---|
-| `confident` | `#e7f2ec` / `#1d5c3f` | `#16241d` / `#84c7a3` | Confidence: confident |
-| `likely` | `#e8f0f7` / `#1e4e79` | `#16202a` / `#8cb8dd` | Confidence: likely |
-| `possible` | `#f7efe0` / `#755619` | `#262015` / `#d3b578` | Confidence: possible |
-| `uncertain` | `#efedea` / `#5f594f` | `#232120` / `#a29a8f` | Confidence: uncertain |
-| `danger` | `#f8ecea` / `#8c2f24` | `#271a18` / `#e09287` | Errors, hard lines, destructive intent |
-
-All pairs meet WCAG AA for normal text against their own background and
-against `paper`.
-
-## 2. Typography — hierarchy through type, not chrome
-
-- **Reading/display face:** `ui-serif, Georgia, Cambria, 'Times New Roman',
-  serif` — the brief is a typeset memo; page titles, brief sections, DNA
-  statements, and Xenia's longer voice moments are serif.
-- **Interface face:** `ui-sans-serif, system-ui, -apple-system, sans-serif`
-  — controls, metadata, tables. System stacks are a deliberate AP8 choice:
-  zero payload, native rendering, revisit via ADR only if a licensed face
-  earns its bytes.
-- **Scale (rem):** 0.75 (meta) · 0.8125 (ui-small) · 0.9375 (ui) · 1.0625
-  (reading, line-height 1.65) · 1.25 (section) · 1.5 (title) · 2.0 (display,
-  marketing only). No font size outside the scale.
-- Reading measure ≤ `65ch`. Numbers in tables `tabular-nums`.
-
-## 3. Space, radius, elevation, blur
-
-- **Spacing:** the 4px grid via Tailwind's default scale; sections breathe
-  at 24–48px; density only where scanning demands it (queues, tables).
-- **Radius:** `6px` controls · `10px` cards/sheets · `999px` chips. Nothing
-  else.
-- **Elevation:** two shadows only. `shadow-card` (barely-there lift for the
-  sheet on paper) and `shadow-raised` (transient surfaces). Hierarchy is
-  typographic; shadows whisper.
-- **Blur (the entire glass budget):** `backdrop-blur` at one strength
-  (12px) on *transient elevated surfaces only* — dialogs, palettes, sheets
-  — over a translucent `surface`. Never on resting content. (Plan §2.)
-
-## 4. Motion — explains, never performs
-
-| Token | Value | Use |
+| Token | Value | Role |
 |---|---|---|
-| `--duration-fast` | 120ms | Hover, focus, chip press |
-| `--duration-base` | 200ms | State changes: resolution replacing buttons, skeleton→content |
-| `--duration-slow` | 320ms | Spatial: sheet entry, the named effect surfacing |
-| `--ease-settle` | `cubic-bezier(0.2, 0, 0, 1)` | Everything entering or changing — fast start, settled end |
-| `--ease-exit` | `cubic-bezier(0.4, 0, 1, 1)` | Everything leaving |
+| `paper` | `#030305` | The page. Deep space, not grey. |
+| `surface` | `#0a0a0c` | Elevated panels. |
+| `surface-2` | `#121216` | Second elevation, inputs, wells. |
+| `panel` | `rgba(255,255,255,0.02)` | The card wash over paper (the os-card material). |
+| `ink` | `#ffffff` | Primary text. |
+| `ink-muted` | `#a1a1a8` | Secondary text. AA on the blacks. |
+| `ink-faint` | `#666670` | Tertiary/metadata. Large/label use only. |
+| `hairline` | `rgba(255,255,255,0.08)` | Borders at rest. |
+| `hairline-hover` | `rgba(255,255,255,0.15)` | Borders under attention. |
+| `royal` | `#3a5cff` | The signature. Active nav, primary CTAs, AI moments, progress. Sparingly. |
+| `royal-bright` | `#4c6cff` | Gradient top, hover. |
+| `royal-deep` | `#1e3ad9` | Gradient base. |
+| `royal-soft` | `rgba(76,108,255,0.18)` | Selected/active fills. |
+| `royal-glow` | `rgba(76,108,255,0.42)` | Glow shadows. Never on body text. |
 
-Laws: no bounce, no spring overshoot, no confetti, no looping attention
-animation, no loading theatre. Motion communicates causality (the
-correction's effect appearing; the card resolving) or it does not exist.
-`prefers-reduced-motion: reduce` collapses all durations to 0 — globally,
-in one rule, not per component.
+Semantic colour (meaning only; the word is always present — colour never
+sole carrier). Foregrounds AA against the blacks:
 
-## 5. UX states — every async surface, four states
+| Token | fg on dark | Meaning |
+|---|---|---|
+| `confident` | `#7fd0a5` on `rgba(60,190,120,0.10)` | Confidence: confident |
+| `likely` | `#8fb7ff` on `rgba(76,108,255,0.12)` | Confidence: likely |
+| `possible` | `#e0bd7d` on `rgba(220,170,80,0.10)` | Confidence: possible |
+| `uncertain` | `#a1a1a8` on `rgba(255,255,255,0.06)` | Confidence: uncertain |
+| `danger` | `#f09a8e` on `rgba(220,80,60,0.10)` | Errors, hard lines |
 
-Every data surface renders exactly one of: **skeleton** (shape-true
-placeholders, `--duration-base` fade to content, no spinners anywhere),
-**content**, **empty** (designed and in-voice — the empty week is
-integrity, not failure), **error** (plain voice: what happened, whose
-fault it isn't, what to do). Primitives: `<Skeleton>`, `<EmptyState>`,
-`<ErrorNotice>` — feature components compose these, never re-invent them.
+## 2. Typography — the three voices
 
-## 6. Focus & accessibility
+- **Display:** Cabinet Grotesk 300, `-0.03em` — page titles, brief section
+  headings, the hero register. Light weight is the premium signal.
+- **Body:** IBM Plex Sans 300/400, `-0.005em` — reading text, controls.
+  Reading text at `1.0625rem/1.65`, measure ≤ `65ch`.
+- **Label:** JetBrains Mono, uppercase, `0.14em` tracking, 10.5–11px —
+  metadata, category headers, week keys, the "RESEARCH BRIEF" register.
+  The mono label is a brand signature; use it wherever the old system
+  used small-caps meta.
+- Loaded from Fontshare/Google per the source (self-hosting: DEBT, pre-GA).
+- Scale (rem): 0.6875 mono-label · 0.8125 ui-small · 0.9375 ui · 1.0625
+  reading · 1.25 section · 1.5 title · 2.25+ display (marketing).
 
-- `:focus-visible` everywhere: 2px `accent` ring, 2px offset, never
-  removed, never colour-only.
-- AA contrast floor (checked in both themes); reading text targets AAA
-  where the palette allows.
-- Confidence words always rendered as text with `role="status"` and an
-  accessible name; colour underlines, never carries.
-- Hit targets ≥ 40px on touch surfaces; keyboard reachability is a
-  release gate for every new interaction.
+## 3. Surfaces — glass, panels, hairlines
 
-## 7. Dark mode
+- **Glass** (`.glass` / `.glass-strong`): blur 24–28px + saturate(140%),
+  white-alpha border, inset top highlight, deep shadow. Roles: application
+  chrome (the frame, the topbar), transient surfaces (palette, dialogs,
+  sheets). *Not* per-card — cards are **panels**.
+- **Panel** (cards, list items): `panel` wash + `hairline` border +
+  `radius-card`; hover raises border to `hairline-hover`. No per-card
+  blur (GPU honesty), no per-card glow.
+- **Royal glow** reserved for: the primary CTA, the active/AI moment, the
+  OS frame's ambient. Never ambient on content.
+- **Radius:** 8px controls/inputs · 12px cards/panels · 999px pills &
+  chips (the CTA is a pill).
+- **Ambient:** the shell may carry one subtle royal radial wash
+  (`ambient-royal`, heavily dimmed) behind content. Vignette, grain, star
+  field, splash, cursor trail: marketing surfaces only (ADR-014 §5).
 
-Automatic via `prefers-color-scheme` — no toggle at V1.1 (calm products
-don't ask questions the OS already answered; a toggle is an ADR away if
-partners ask). Both themes are first-class: every token defined in both,
-every screen reviewed in both, AA in both. Dark is warm (brown-blacks, not
-blue-blacks) — midnight reading, per the ICP, is the design case.
+## 4. Motion — explains, never performs (unchanged in law)
 
-## 8. Iconography & illustration (Phase 2+)
+Durations 120/200/320ms; `--ease-settle: cubic-bezier(0.2,0,0,1)`;
+settle-in entrances; the pulse-dot is the only permitted looping element
+and only as a live/AI indicator (it is the heartbeat, not decoration).
+`prefers-reduced-motion` collapses everything, globally. The black-hole
+mark's slow disc rotation counts as the brand's one ambient motion and
+respects the same law.
 
-One line-icon family (Lucide, via ADR when introduced), 1.5px stroke,
-16/20px sizes, `ink-muted` default. No emoji in product UI. Illustration
-stance: abstract and evidentiary (documents, threads, marks on paper) —
-never mascots, never stock-3D. Until then: typography does the work.
+## 5. UX states, focus, accessibility (unchanged in law)
+
+Four states per async surface (skeleton/content/empty/error) via the
+shared primitives; skeletons breathe with white-alpha, never spin. Focus:
+2px royal ring, visible always. AA floor on every fg/bg pair above;
+`ink-faint` never carries reading text. Confidence words remain text with
+`role="status"`. Hit targets ≥ 40px on touch.
+
+## 6. The brand mark
+
+`BlackHoleMark` (pure CSS/SVG, ported from the source) is the product
+mark: topbar at 18–24px, loading and AI-processing moments at larger
+sizes. It is never decorated further and never duplicated per-card.

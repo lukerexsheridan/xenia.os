@@ -2,6 +2,20 @@
 
 Format: keep-a-changelog-ish; one entry per released state, newest first.
 
+## Design authority adopted — 2026-07-21
+
+The founder supplied the actual landing page (`xenia-source/`); ADR-014
+ratifies it as the design source of truth, superseding the interim
+warm-paper system. The app re-skins to its language: deep-space black with
+a dimmed royal ambient wash, white/muted/faint ink on white-alpha
+hairlines, the royal-blue signature (CTA gradient pills, focus rings,
+active states), panel cards, glass reserved for chrome and transient
+surfaces, Cabinet Grotesk display / IBM Plex Sans body / JetBrains Mono
+label voices, and the BlackHoleMark in the topbar. Dark-first single
+theme. The demo's fictional modules ratify no capabilities; AA, visible
+focus, and the reduced-motion law are retained. All suites + loop-walk
+E2E green on the new skin; screens re-reviewed from captures.
+
 ## V1.1 constitution + Phase 2 (in progress) — 2026-07-20
 
 Doc 12 (Product Manifesto, M1–M12) and Doc 13 (Product Intelligence

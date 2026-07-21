@@ -87,13 +87,13 @@ export function InterviewView() {
       )}
       <p
         data-testid="interview-prompt"
-        className="text-ink mt-4 font-serif text-lg leading-relaxed"
+        className="text-ink font-display mt-4 text-lg leading-relaxed"
       >
         {amending ? `(Changing an earlier answer) ${activePrompt}` : activePrompt}
       </p>
       <textarea
         data-testid="interview-answer"
-        className="rounded-card border-hairline bg-surface text-ink mt-4 w-full border p-3 font-serif text-[1.0625rem] leading-[1.65]"
+        className="rounded-card border-hairline bg-surface-2 text-ink mt-4 w-full border p-3 text-[1.0625rem] leading-[1.65] font-light"
         rows={activeOnePerLine ? 5 : 3}
         placeholder={activeOnePerLine ? "One per line" : "In your own words"}
         value={text}

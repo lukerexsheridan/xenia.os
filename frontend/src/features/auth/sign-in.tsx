@@ -30,13 +30,13 @@ export function SignIn() {
 
   return (
     <main className="animate-settle-in mx-auto max-w-md px-6 py-24">
-      <h1 className="text-ink font-serif text-2xl">Xenia</h1>
+      <h1 className="text-ink font-display text-2xl">Xenia</h1>
       <p className="text-ink-muted mt-2 text-sm leading-relaxed">
         Your access token, please — your account team will have sent it.
       </p>
       <textarea
         data-testid="token-input"
-        className="rounded-card border-hairline bg-surface text-ink mt-4 w-full border p-3 font-mono text-xs"
+        className="rounded-card border-hairline bg-surface-2 text-ink mt-4 w-full border p-3 font-mono text-xs"
         rows={4}
         value={value}
         onChange={(event) => setValue(event.target.value)}

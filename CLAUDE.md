@@ -568,7 +568,12 @@ L2 judge (advisory, allowed to mature), sampling narrowing only as the
 harness earns it, sustained unedited-pass ≥70% x4 weeks, unit cost within
 the ratified ceiling, and the cohort to ~25.
 V1.1 (the quality phase) is governed by
-`docs/11_V1_1_PRODUCT_EVOLUTION_PLAN.md` and `docs/design/DESIGN_SYSTEM.md`
+`docs/11_V1_1_PRODUCT_EVOLUTION_PLAN.md` and `docs/design/DESIGN_SYSTEM.md`;
+**`xenia-source/` is the founder-locked design authority (ADR-014)** —
+deep-space black, royal-blue signature, glass chrome, Cabinet Grotesk/IBM
+Plex/JetBrains Mono, the BlackHoleMark — all UX/UI decisions derive from
+it (its demo modules ratify no capabilities; N1 and the never-automatic
+floor still bind)
 — six phases, benchmark quality, no new capabilities. Phase 1 (design
 tokens, dark mode, UX-state primitives, motion vocabulary, full screen
 sweep) is complete; Phase 2 (per-screen experience) is next.

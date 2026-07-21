@@ -82,11 +82,11 @@ export function DnaView() {
   return (
     <div className="animate-settle-in max-w-prose">
       <header className="flex items-baseline justify-between">
-        <h2 className="text-ink font-serif text-xl">Your ideal-client DNA</h2>
+        <h2 className="text-ink font-display text-xl">Your ideal-client DNA</h2>
         <span className="text-ink-faint text-xs">version {data.version}</span>
       </header>
       {!data.endorsed && (
-        <div className="rounded-card border-hairline bg-possible-surface mt-3 border p-4">
+        <div className="panel bg-possible-surface mt-3 p-4">
           <p className="text-ink text-sm leading-relaxed">
             This is my model of who you sell to, in your words. Read it; when it&apos;s right,
             endorse it and it becomes our shared agreement.
@@ -108,14 +108,12 @@ export function DnaView() {
       )}
       {grouped.map((group) => (
         <section key={group.title} className="mt-6">
-          <h3 className="text-ink-muted text-xs font-medium tracking-wide uppercase">
-            {group.title}
-          </h3>
+          <h3 className="mono-label text-ink-faint">{group.title}</h3>
           <ul className="mt-2 space-y-2">
             {group.elements.map((element) => (
               <li
                 key={element.element_id}
-                className="text-ink flex items-start justify-between gap-3 font-serif text-[1.0625rem] leading-[1.65]"
+                className="text-ink flex items-start justify-between gap-3 text-[1.0625rem] leading-[1.65] font-light"
               >
                 <span>{element.statement}</span>
                 <button
@@ -136,11 +134,8 @@ export function DnaView() {
         <section data-testid="proposals" className="border-hairline mt-8 border-t pt-4">
           <h3 className="text-ink text-sm font-medium">Awaiting your signature</h3>
           {open.map((proposal) => (
-            <div
-              key={proposal.proposal_id}
-              className="rounded-card border-hairline bg-surface shadow-card mt-2 border p-4"
-            >
-              <p className="text-ink font-serif text-[1.0625rem]">{proposal.statement}</p>
+            <div key={proposal.proposal_id} className="panel shadow-card mt-2 p-4">
+              <p className="text-ink text-[1.0625rem] font-light">{proposal.statement}</p>
               <p className="text-ink-muted mt-1 text-xs leading-relaxed">{proposal.rationale}</p>
               <div className="mt-2.5 flex gap-2">
                 <button
@@ -204,9 +199,5 @@ export function DnaView() {
 
 /** The named effect: an acknowledgment card, not an alarm. */
 function ErrorNoticeLike({ children }: { children: string }) {
-  return (
-    <p className="rounded-card border-hairline bg-surface text-ink shadow-card border p-3 text-sm font-medium">
-      {children}
-    </p>
-  );
+  return <p className="panel shadow-card text-ink p-3 text-sm font-medium">{children}</p>;
 }

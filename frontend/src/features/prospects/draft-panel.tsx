@@ -54,7 +54,7 @@ export function DraftPanel({ prospectId }: { prospectId: string }) {
         <div className="animate-settle-in mt-2">
           <textarea
             data-testid="draft-body"
-            className="rounded-card border-hairline bg-surface text-ink w-full border p-3 font-serif text-[1.0625rem] leading-[1.65]"
+            className="rounded-card border-hairline bg-surface-2 text-ink w-full border p-3 text-[1.0625rem] leading-[1.65] font-light"
             rows={6}
             value={body}
             onChange={(event) => setText(event.target.value)}

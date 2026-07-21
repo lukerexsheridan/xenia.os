@@ -1,39 +1,48 @@
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@300,400,500&f[]=jetbrains-mono@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap");
 @import "tailwindcss";
 
 /*
- * The Xenia Design System, as law (docs/design/DESIGN_SYSTEM.md; Doc 06 §8):
- * ink, paper, one accent; semantic colour only; hierarchy through
- * typography, not chrome; motion explains, never performs. Feature
- * components use these tokens — raw palette utilities are a review failure.
- *
- * Both themes are first-class. Dark follows the OS (no toggle at V1.1);
- * warm brown-blacks, never blue-blacks — midnight reading is the design case.
+ * The Xenia Design System (docs/design/DESIGN_SYSTEM.md; ADR-014):
+ * derived from xenia-source, the founder-locked design authority.
+ * Deep space black, white ink, one royal signature, glass chrome,
+ * panel cards, three type voices. Dark-first, single theme.
+ * Feature components use these tokens — raw palette utilities are a
+ * review failure.
  */
 
 :root {
-  --paper: #faf9f7;
-  --surface: #ffffff;
-  --surface-translucent: rgb(255 255 255 / 0.82);
-  --ink: #211e1a;
-  --ink-muted: #6d675e;
-  --ink-faint: #98918a;
-  --hairline: #e6e2db;
-  --accent: #3a5bc7;
-  --accent-ink: #ffffff;
+  color-scheme: dark;
 
-  --confident-surface: #e7f2ec;
-  --confident-ink: #1d5c3f;
-  --likely-surface: #e8f0f7;
-  --likely-ink: #1e4e79;
-  --possible-surface: #f7efe0;
-  --possible-ink: #755619;
-  --uncertain-surface: #efedea;
-  --uncertain-ink: #5f594f;
-  --danger-surface: #f8ecea;
-  --danger-ink: #8c2f24;
+  --paper: #030305;
+  --surface: #0a0a0c;
+  --surface-2: #121216;
+  --panel: rgba(255, 255, 255, 0.02);
+  --ink: #ffffff;
+  --ink-muted: #a1a1a8;
+  --ink-faint: #666670;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-hover: rgba(255, 255, 255, 0.15);
 
-  --shadow-card: 0 1px 2px rgb(33 30 26 / 0.05), 0 1px 1px rgb(33 30 26 / 0.03);
-  --shadow-raised: 0 8px 30px rgb(33 30 26 / 0.12);
+  --royal: #3a5cff;
+  --royal-bright: #4c6cff;
+  --royal-deep: #1e3ad9;
+  --royal-soft: rgba(76, 108, 255, 0.18);
+  --royal-glow: rgba(76, 108, 255, 0.42);
+
+  --confident-surface: rgba(60, 190, 120, 0.1);
+  --confident-ink: #7fd0a5;
+  --likely-surface: rgba(76, 108, 255, 0.12);
+  --likely-ink: #8fb7ff;
+  --possible-surface: rgba(220, 170, 80, 0.1);
+  --possible-ink: #e0bd7d;
+  --uncertain-surface: rgba(255, 255, 255, 0.06);
+  --uncertain-ink: #a1a1a8;
+  --danger-surface: rgba(220, 80, 60, 0.1);
+  --danger-ink: #f09a8e;
+
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-raised: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.06);
 
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -42,43 +51,19 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #141312;
-    --surface: #1c1a18;
-    --surface-translucent: rgb(28 26 24 / 0.82);
-    --ink: #e9e6e0;
-    --ink-muted: #9d968b;
-    --ink-faint: #6d675f;
-    --hairline: #2e2b27;
-    --accent: #93aaf5;
-    --accent-ink: #10131f;
-
-    --confident-surface: #16241d;
-    --confident-ink: #84c7a3;
-    --likely-surface: #16202a;
-    --likely-ink: #8cb8dd;
-    --possible-surface: #262015;
-    --possible-ink: #d3b578;
-    --uncertain-surface: #232120;
-    --uncertain-ink: #a29a8f;
-    --danger-surface: #271a18;
-    --danger-ink: #e09287;
-
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-raised: 0 8px 30px rgb(0 0 0 / 0.5);
-  }
-}
-
 @theme inline {
   --color-paper: var(--paper);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-panel: var(--panel);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-faint: var(--ink-faint);
   --color-hairline: var(--hairline);
-  --color-accent: var(--accent);
-  --color-accent-ink: var(--accent-ink);
+  --color-hairline-hover: var(--hairline-hover);
+  --color-accent: var(--royal-bright);
+  --color-accent-ink: #ffffff;
+  --color-royal-soft: var(--royal-soft);
   --color-confident-surface: var(--confident-surface);
   --color-confident-ink: var(--confident-ink);
   --color-likely-surface: var(--likely-surface);
@@ -90,37 +75,94 @@
   --color-danger-surface: var(--danger-surface);
   --color-danger-ink: var(--danger-ink);
 
-  --radius-control: 6px;
-  --radius-card: 10px;
+  --radius-control: 8px;
+  --radius-card: 12px;
 
   --shadow-card: var(--shadow-card);
   --shadow-raised: var(--shadow-raised);
 }
 
-/* Typography: the reading face is a serif document; the interface is quiet. */
+/* The three type voices (Design System §2). */
 body {
   background-color: var(--paper);
   color: var(--ink);
   font-family:
-    ui-sans-serif,
+    "IBM Plex Sans",
     system-ui,
     -apple-system,
     sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.font-serif {
-  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+.font-display {
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.03em;
 }
 
-/* Focus is visible, always: 2px accent ring, offset, never removed. */
+.mono-label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Glass — application chrome and transient surfaces only (§3). */
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Panel — the card material: wash + hairline, no per-card blur (§3). */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  transition: border-color var(--duration-fast) var(--ease-settle);
+}
+.panel:hover {
+  border-color: var(--hairline-hover);
+}
+
+/* The royal signature — primary CTA gradient pill (§3). Sparingly. */
+.bg-royal-cta {
+  background: linear-gradient(
+    180deg,
+    var(--royal-bright) 0%,
+    var(--royal) 55%,
+    var(--royal-deep) 100%
+  );
+  border: 1px solid rgba(140, 165, 255, 0.35);
+}
+
+/* One subtle ambient wash behind the shell — dimmed from the source. */
+.ambient-royal {
+  background:
+    radial-gradient(1200px 700px at 15% 8%, rgba(76, 108, 255, 0.07), transparent 55%),
+    radial-gradient(800px 500px at 85% 100%, rgba(30, 58, 217, 0.05), transparent 60%);
+}
+
+/* Focus is visible, always: the royal ring. */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--royal-bright);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-/* Motion vocabulary. Settle in, exit out; nothing performs. */
+::selection {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* Motion vocabulary (§4) — unchanged in law. */
 .transition-settle {
   transition-duration: var(--duration-base);
   transition-timing-function: var(--ease-settle);
@@ -144,10 +186,10 @@ body {
 @keyframes skeleton-breathe {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.45;
   }
   50% {
-    opacity: 0.9;
+    opacity: 0.8;
   }
 }
 

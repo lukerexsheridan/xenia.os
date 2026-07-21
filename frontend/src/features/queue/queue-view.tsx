@@ -53,9 +53,9 @@ export function QueueView() {
   }
 
   return (
-    <div className="animate-settle-in max-w-2xl space-y-4">
-      <p className="text-ink-muted text-sm">
-        Week {queue.data.week_key} — {ranked.length} recommended, ranked. One decision per card.
+    <div className="animate-settle-in max-w-2xl space-y-3">
+      <p className="mono-label text-ink-faint">
+        Week {queue.data.week_key} · {ranked.length} recommended · one decision per card
       </p>
       {ranked.map((item) => (
         <QueueCard key={item.recommendation_id} item={item} />
@@ -107,12 +107,9 @@ function QueueCard({ item }: { item: QueueItem }) {
   });
 
   return (
-    <article
-      data-testid="queue-card"
-      className="transition-settle rounded-card border-hairline bg-surface shadow-card border p-4"
-    >
+    <article data-testid="queue-card" className="panel shadow-card p-4">
       <header className="flex items-baseline justify-between gap-3">
-        <h3 className="text-ink font-serif text-lg">
+        <h3 className="text-ink font-display text-lg">
           {item.rank}.{" "}
           <Link
             to="/prospects/$prospectId"

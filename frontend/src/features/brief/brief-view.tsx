@@ -40,13 +40,13 @@ export function BriefView({ prospectId }: { prospectId: string }) {
   return (
     <article data-testid="brief" className="animate-settle-in max-w-prose">
       <header className="flex items-baseline justify-between">
-        <p className="text-ink-faint text-xs tracking-wide uppercase">Research brief</p>
+        <p className="mono-label text-ink-faint">Research brief</p>
         <ConfidenceWord word={data.confidence_word} />
       </header>
       {aboveFold.map((section) => (
         <section key={section.code} className="mt-6">
-          <h3 className="text-ink font-serif text-lg">{section.title}</h3>
-          <p className="text-ink mt-1 font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-line">
+          <h3 className="text-ink font-display text-lg">{section.title}</h3>
+          <p className="text-ink mt-1 text-[1.0625rem] leading-[1.65] font-light whitespace-pre-line">
             {section.content}
           </p>
         </section>
@@ -54,14 +54,14 @@ export function BriefView({ prospectId }: { prospectId: string }) {
       <hr className="border-hairline mt-8 border-t" aria-hidden="true" />
       {belowFold.map((section) => (
         <section key={section.code} className="mt-6">
-          <h3 className="text-ink font-serif text-lg">{section.title}</h3>
-          <p className="text-ink mt-1 font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-line">
+          <h3 className="text-ink font-display text-lg">{section.title}</h3>
+          <p className="text-ink mt-1 text-[1.0625rem] leading-[1.65] font-light whitespace-pre-line">
             {section.content}
           </p>
         </section>
       ))}
       {data.couldnt_see.length > 0 && (
-        <section className="rounded-card border-hairline bg-paper mt-8 border p-4">
+        <section className="panel mt-8 p-4">
           <h3 className="text-ink text-sm font-medium">What I couldn&apos;t see</h3>
           <ul className="text-ink-muted mt-1 list-disc pl-5 text-sm leading-relaxed">
             {data.couldnt_see.map((entry, index) => (

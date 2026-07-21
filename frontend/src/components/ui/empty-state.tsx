@@ -15,7 +15,7 @@ export function EmptyState({
 }) {
   return (
     <div data-testid={testId} className="animate-settle-in max-w-prose py-8">
-      <h2 className="text-ink font-serif text-xl">{title}</h2>
+      <h2 className="text-ink font-display text-xl">{title}</h2>
       <div className="text-ink-muted mt-2 text-sm leading-relaxed">{children}</div>
     </div>
   );

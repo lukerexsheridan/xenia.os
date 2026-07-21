@@ -21,6 +21,11 @@ provisioned.
 
 ## Medium (repay within the MVP phase)
 
+- **2026-07-21 — Brand fonts load from Fontshare/Google CDNs** (ADR-014,
+  matching xenia-source). Third-party requests on every app load: privacy
+  posture + latency. *Repay:* self-host Cabinet Grotesk, IBM Plex Sans,
+  and JetBrains Mono before GA.
+
 - **2026-07-20 — The golden-set store is managed but unconsumed.** The
   Editor curates entries; no harness reads them (CI's golden job runs
   static fixtures). The evaluation layer is thinner than Doc 04 describes.

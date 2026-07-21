@@ -17,11 +17,12 @@ import { DnaView } from "@/features/dna/dna-view";
 import { InterviewView } from "@/features/onboarding/interview-view";
 import { ProspectView } from "@/features/prospects/prospect-view";
 import { QueueView } from "@/features/queue/queue-view";
+import { BlackHoleMark } from "@/components/brand/black-hole-mark";
 import { api, clearToken, getToken } from "@/lib/api/client";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <div className="bg-paper text-ink min-h-screen">
+    <div className="bg-paper text-ink ambient-royal min-h-screen">
       <Outlet />
     </div>
   ),
@@ -41,8 +42,11 @@ const shellRoute = createRoute({
   },
   component: () => (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
-      <header className="border-hairline flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b pb-4">
-        <h1 className="text-ink font-serif text-xl">Xenia</h1>
+      <header className="border-hairline flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b pb-4">
+        <h1 className="text-ink font-display flex items-center gap-2.5 text-xl">
+          <BlackHoleMark size={22} />
+          Xenia
+        </h1>
         <nav className="text-ink-muted flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link
             to="/"

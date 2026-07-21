@@ -1,0 +1,305 @@
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@300,400,500&f[]=jetbrains-mono@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    color-scheme: dark;
+    --xn-bg: #030305;
+    --xn-bg-2: #0a0a0c;
+    --xn-bg-3: #121216;
+    --xn-fg: #ffffff;
+    --xn-fg-2: #a1a1a8;
+    --xn-fg-3: #666670;
+    --xn-line: rgba(255, 255, 255, 0.08);
+    --xn-line-hover: rgba(255, 255, 255, 0.15);
+    /* Royal blue — Xenia's signature accent. Deep, saturated, not neon. */
+    --xn-royal: #3a5cff;
+    --xn-royal-2: #4c6cff;
+    --xn-royal-deep: #1e3ad9;
+    --xn-royal-soft: rgba(76, 108, 255, 0.18);
+    --xn-royal-glow: rgba(76, 108, 255, 0.42);
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+    background: var(--xn-bg);
+    color: var(--xn-fg);
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.font-display {
+    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+}
+
+.font-mono-xn {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.45),
+        inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-strong {
+    background: rgba(10, 10, 12, 0.66);
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.55),
+        inset 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+
+.hairline {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.18) 20%,
+        rgba(255, 255, 255, 0.18) 80%,
+        transparent
+    );
+    height: 1px;
+    width: 100%;
+}
+
+.vignette::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 40%,
+        rgba(0, 0, 0, 0.55) 100%
+    );
+    z-index: 5;
+}
+
+.grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Custom cursor selection */
+::selection {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+/* Divider dot */
+.dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+    animation: xn-pulse 2.4s ease-in-out infinite;
+}
+
+.pulse-dot-blue {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--xn-royal-2);
+    box-shadow:
+        0 0 10px rgba(76, 108, 255, 0.9),
+        0 0 20px rgba(76, 108, 255, 0.4);
+    animation: xn-pulse 2.4s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes xn-pulse {
+    0%,
+    100% {
+        opacity: 0.9;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.35;
+        transform: scale(0.85);
+    }
+}
+
+/* Royal-blue signature — used sparingly for buttons, active nav, AI highlights. */
+.bg-royal {
+    background: linear-gradient(180deg, var(--xn-royal-2) 0%, var(--xn-royal) 55%, var(--xn-royal-deep) 100%);
+    border: 1px solid rgba(140, 165, 255, 0.35);
+}
+.text-blue-signature {
+    color: #b6c3ff;
+    text-shadow: 0 0 24px rgba(76, 108, 255, 0.4);
+    font-style: italic;
+    font-weight: 400;
+}
+.ring-royal {
+    box-shadow: 0 0 0 1px rgba(76, 108, 255, 0.55), 0 0 24px rgba(76, 108, 255, 0.35);
+}
+.nav-link {
+    position: relative;
+}
+.nav-link:hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(76, 108, 255, 0.9), transparent);
+}
+
+/* Ambient royal-blue backdrop — the whole page sits inside a soft cosmic wash. */
+.ambient-royal {
+    background:
+        radial-gradient(1200px 700px at 15% 8%, rgba(76, 108, 255, 0.14), transparent 55%),
+        radial-gradient(1000px 700px at 90% 30%, rgba(120, 90, 220, 0.08), transparent 60%),
+        radial-gradient(800px 500px at 50% 100%, rgba(30, 58, 217, 0.12), transparent 60%);
+}
+.star-field {
+    background-image:
+        radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.55), transparent 60%),
+        radial-gradient(1px 1px at 40% 70%, rgba(255, 255, 255, 0.35), transparent 60%),
+        radial-gradient(1px 1px at 65% 20%, rgba(255, 255, 255, 0.5), transparent 60%),
+        radial-gradient(1.2px 1.2px at 82% 55%, rgba(200, 220, 255, 0.55), transparent 60%),
+        radial-gradient(1px 1px at 10% 80%, rgba(255, 255, 255, 0.35), transparent 60%),
+        radial-gradient(1px 1px at 92% 88%, rgba(255, 255, 255, 0.4), transparent 60%),
+        radial-gradient(1px 1px at 55% 45%, rgba(200, 220, 255, 0.4), transparent 60%);
+    opacity: 0.6;
+}
+
+/* Full-page route transition overlay — flashes the black hole mark
+   when the pathname changes. Never blocks pointer events beyond its lifetime. */
+.route-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    background: rgba(3, 3, 5, 0.9);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms ease;
+}
+.route-transition-on {
+    opacity: 1;
+    pointer-events: auto;
+}
+.route-transition-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.underline-input {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.6rem 0.2rem;
+    outline: none;
+    transition:
+        border-color 0.4s ease,
+        transform 0.4s ease;
+    width: 100%;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 1.05rem;
+}
+
+.underline-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.underline-input:focus {
+    border-color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+@layer base {
+    :root {
+        --background: 240 8% 2%;
+        --foreground: 0 0% 100%;
+        --card: 240 8% 4%;
+        --card-foreground: 0 0% 100%;
+        --popover: 240 8% 4%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 0 0% 100%;
+        --primary-foreground: 240 8% 4%;
+        --secondary: 240 5% 10%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 240 5% 8%;
+        --muted-foreground: 240 4% 65%;
+        --accent: 240 5% 10%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 6% 14%;
+        --input: 240 6% 14%;
+        --ring: 0 0% 85%;
+        --radius: 0.75rem;
+    }
+}
+
+@layer base {
+    body {
+        @apply bg-background text-foreground;
+    }
+}

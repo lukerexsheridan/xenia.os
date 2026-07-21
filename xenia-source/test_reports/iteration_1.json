@@ -1,0 +1,32 @@
+{
+  "summary": "Xenia MVP first-run test. Backend + frontend cinematic experience validated end-to-end. All 5 pytest backend cases and all requested UI checks pass. No console errors during full-page scroll and form submission.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "CommandCentre HUD vs on-screen Act", "issues": ["HUD act label lags the visible section by ~1-2 acts near the end of the scroll (at 85% scroll HUD shows 'Act 05 Personalisation' while Act VII - Scale is fully in view; at 95% HUD shows 'Act 06 The Agency' while RequestAccess is centred). Acceptance criteria are met (label advances past 'The Noise' toward 'Discovery' at ~50%), but end-of-scroll alignment feels ~1 slot behind. Consider mapping act index to the currently in-view section rather than raw scroll fraction, or advancing the divisor so the HUD reaches Act 07 by ~90%."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_backend.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "(Optional polish) Align CommandCentre act index with the section currently in the viewport - at the end of the scroll the HUD trails the visible act by 1-2 slots."
+  ],
+  "critical_code_review_comments": [
+    "server.py: /api/access lowercases + strips email before insert (good) and returns existing record on duplicate (idempotent) - correct behaviour.",
+    "server.py: _id is properly excluded via projection {'_id': 0} in both GET /api/access and GET /api/status - no ObjectId serialisation risk.",
+    "server.py uses deprecated @app.on_event('shutdown') - FastAPI recommends lifespan handlers. Non-blocking.",
+    "Experience.jsx: scroll->act mapping uses floor(rawIndex) - 1 which under-shoots at the tail (HUD offset issue above). Minor UX polish.",
+    "RequestAccess.jsx: Good - uses REACT_APP_BACKEND_URL, has data-testid on all interactive nodes, HTML5 email validation blocks bad submits before the API call, confirmation state renders on success."
+  ],
+  "updated_files": ["/app/backend/tests/test_backend.py"],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% of acceptance checks"},
+  "seed_data_creation": "test_* prefixed AccessRequest rows inserted into MongoDB test_database.access_requests during pytest and Playwright runs. These are harmless; the collection is used solely for lead capture.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend at REACT_APP_BACKEND_URL/api. Endpoints: GET /api/, POST /api/access (idempotent by lowercased email), GET /api/access. Frontend is scroll-driven: use window.scrollTo({top: N, behavior: 'instant'}) to advance acts, do NOT expect buttons for navigation. Key data-testids: xn-nav, hero, hero-signal-counter, command-centre, act-1..act-7, intel-card-3-0, email-preview-4, approve-4/revise-4, request-access, access-email, access-role, access-submit, access-confirmation. Sonner toast fires on successful POST. HTML5 email validation blocks invalid input client-side before the API call. Ignore Compilation.assets webpack deprecation warning.",
+  "rca of the issue": "N/A - no bugs blocking acceptance criteria. Sole observation is a cosmetic HUD/section offset near end of scroll caused by (Math.floor(p * (TOTAL_SCENES-1)) - 1) mapping in Experience.jsx line 55-57."
+}

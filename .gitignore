@@ -33,3 +33,7 @@ frontend/openapi.json
 # Local data
 postgres-data/
 minio-data/
+
+# xenia-source is design reference material; its env files carry live secrets
+xenia-source/**/.env
+*Zone.Identifier

@@ -4,11 +4,13 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { download, setToken } from "./client";
+import { setDevToken } from "@/lib/auth/client";
+
+import { download } from "./client";
 
 describe("authenticated download", () => {
   beforeEach(() => {
-    setToken("test-token");
+    setDevToken("test-token");
     vi.stubGlobal("URL", {
       createObjectURL: vi.fn(() => "blob:fake"),
       revokeObjectURL: vi.fn(),

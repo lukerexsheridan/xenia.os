@@ -107,18 +107,24 @@ telemetry-mined anticipation (I10). *Exit:* Monday's ten minutes completed
 without a pointer; every palette command also exists as a visible
 affordance.
 
-### Phase 4 — Authentication experience *(repays ADR-012, the GA gate)*
-The hosted Supabase flow: sign-in/sign-up/magic link, session persistence
-with silent refresh, "remember this device", sign-out everywhere (token
-revocation), session-restoration UX. **Architecture now, biometrics later:**
-the session layer is designed so the future iOS app adds Face ID/Touch ID
-without backend change — Supabase refresh token held in iOS Keychain behind
-`kSecAccessControlBiometryCurrentSet`, biometric unlock releases the stored
-refresh token to mint a short-lived access token; the web app never sees
-biometrics; revocation invalidates the refresh token family server-side;
-passkeys slot in as a Supabase auth method when adopted. Documented as
-`docs/design/AUTH_ARCHITECTURE.md` + an ADR superseding 012. *Exit:* a
-design partner signs up unassisted; ADR-012's fence is demolished.
+### Phase 4 — Authentication experience ✅ *(core shipped — repays ADR-012)*
+The hosted Supabase flow shipped 2026-07-22 (ADR-015): magic-link
+sign-in/sign-up as one act, session persistence with silent refresh
+(the SDK's defaults), sign-out everywhere (`scope: "global"`
+revocation), session-restoration UX (the router guard waits on the
+primed auth cache, so a returning user never sees the sign-in screen
+flash). A developer fallback (paste-a-token) remains for environments
+with no live Supabase project — local dev, CI/E2E — clearly branched,
+never shown in a configured production deployment. **Still open:**
+biometrics remain architecture-only, for the future iOS app — Supabase
+refresh token held in iOS Keychain behind
+`kSecAccessControlBiometryCurrentSet`, biometric unlock releases the
+stored refresh token to mint a short-lived access token; the web app
+never sees biometrics; passkeys slot in as a Supabase auth method when
+adopted. A dedicated `docs/design/AUTH_ARCHITECTURE.md` for that iOS
+work is deferred (this paragraph is its interim record) — tracked
+alongside Phase 7. *Exit met:* a design partner signs up unassisted;
+ADR-012's fence is demolished.
 
 ### Phase 5 — The marketing website
 A separate static site (`website/`, Astro or plain Vite — decided by ADR),

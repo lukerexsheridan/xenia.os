@@ -8,11 +8,6 @@ provisioned.
 
 ## GA-gating
 
-- **2026-07-20 — Hosted auth flow absent (ADR-012).** Sign-in is a pasted,
-  founder-issued token; no self-serve signup, no refresh, no sign-out
-  round-trip. Server-side verification is final; the client acquisition is
-  provisional. *Repay:* wire the hosted Supabase flow before any
-  non-provisioned user exists.
 - **2026-07-20 — Least-privileged DB role unexercised in CI (ADR-010).**
   Worker and API now attach tenancy context everywhere, but no CI job runs
   the suite as a non-superuser application role beyond the RLS canary's
@@ -34,6 +29,10 @@ provisioned.
   the governor is enabled. Acceptable for a trusted ~10-partner cohort.
 - **2026-07-20 — No rate limiting on /v1.** Authenticated-only, but
   composition endpoints spend tokens per call.
+- **2026-07-22 — Frontend bundle grew ~250KB raw from `@supabase/supabase-js`**
+  (ADR-015). ~40KB gzip; not worth code-splitting before the app has
+  enough routes to split meaningfully against. Revisit once the route
+  tree grows past the current four screens.
 - **2026-07-20 — Stripe subscription events are not ordered.** A late
   `customer.subscription.updated` replayed after `deleted` can resurrect
   an active status. Low likelihood at founding scale; the console shows

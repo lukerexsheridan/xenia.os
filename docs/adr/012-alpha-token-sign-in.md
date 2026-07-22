@@ -1,6 +1,6 @@
 # ADR-012: Alpha token-based sign-in
 
-Status: Accepted (alpha only — a GA blocker by its own terms)
+Status: Superseded by [ADR-015](015-hosted-auth-shipped.md) — the GA blocker is repaid
 Date: 2026-07-20
 
 ## Context

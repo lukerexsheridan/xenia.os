@@ -24,6 +24,8 @@ face). Constitutional deviations escalate to a document amendment.
 | [011](011-deterministic-scripted-interview.md) | Deterministic scripted interview at alpha | Accepted |
 | [012](012-alpha-token-sign-in.md) | Alpha token-based sign-in (GA blocker) | Accepted |
 | [013](013-family-level-disqualifier-matching.md) | Family-level disqualifier matching | Accepted |
+| [014](014-xenia-source-design-authority.md) | xenia-source is the design source of truth | Accepted |
+| [015](015-hosted-auth-shipped.md) | Hosted Supabase auth shipped | Accepted — supersedes 012 |
 
 ## Writing a new ADR
 

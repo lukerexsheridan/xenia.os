@@ -2,6 +2,22 @@
 
 Format: keep-a-changelog-ish; one entry per released state, newest first.
 
+## Hosted auth shipped — 2026-07-22
+
+Execution-mode Tier 1 (ADR-015, supersedes ADR-012): magic-link sign-in
+replaces paste-a-token as the production flow. One email field, no
+password; entering a new address provisions the workspace on first use
+(unchanged backend behaviour). Session persistence, silent refresh, and
+sign-out-everywhere are the Supabase SDK's defaults, wired through a
+small `lib/auth/client.ts` seam that keeps a synchronously-readable token
+cache live via `onAuthStateChange`. The developer paste-a-token screen is
+preserved as an explicit fallback for environments with no live Supabase
+project — local dev, CI, the E2E harness — so the existing test suite
+needed zero changes to keep passing. Zero backend changes: the JWT
+verifier already accepted real Supabase tokens. This was the
+most-repeated finding across both prior strategic audits — the
+precondition every other recommendation sat behind.
+
 ## Design authority adopted — 2026-07-21
 
 The founder supplied the actual landing page (`xenia-source/`); ADR-014

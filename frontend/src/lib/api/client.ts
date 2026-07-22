@@ -8,23 +8,20 @@
  * and lesson narrations are all server-authored strings (AP5).
  */
 
+import { getCachedAccessToken, signOut as authSignOut } from "@/lib/auth/client";
 import type { components } from "@/lib/api/schema";
 
 export const API_BASE_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-const TOKEN_KEY = "xenia_access_token";
-
+/** The single source of truth for "am I signed in" — Supabase's cached
+ * session token in production, the dev-fallback token otherwise (see
+ * lib/auth/client.ts). */
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return getCachedAccessToken();
 }
 
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
-}
+/** Signs out everywhere and clears whichever token source is active. */
+export const clearToken = authSignOut;
 
 /** The plain-voice error (Doc 06 §9): what happened, in words. */
 export class ApiError extends Error {

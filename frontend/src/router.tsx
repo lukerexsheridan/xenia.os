@@ -78,8 +78,7 @@ const shellRoute = createRoute({
           <button
             className="transition-settle text-ink-faint hover:text-ink"
             onClick={() => {
-              clearToken();
-              window.location.assign("/signin");
+              void clearToken().then(() => window.location.assign("/signin"));
             }}
           >
             Sign out
